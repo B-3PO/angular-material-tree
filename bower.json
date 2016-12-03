@@ -1,0 +1,41 @@
+{
+  "name": "angular-material-tree",
+  "version": "0.0.0",
+  "description": "Angular material tree component",
+  "main": [
+    "dist/angular-material-tree.js",
+    "dist/angular-material-tree.css"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:bypasslane/angular-material-tree.git"
+  },
+  "authors": [
+    "Ben Rubin"
+  ],
+  "license": "MIT",
+  "keywords": [
+    "material",
+    "material-design",
+    "design",
+    "angular",
+    "component",
+    "tree",
+    "md"
+  ],
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "docsApp",
+    "src",
+    "gulp"
+  ],
+  "dependencies": {
+    "angular": "^1.5.8"
+  },
+  "devDependencies": {
+    "angular-mocks": "^1.5.8",
+    "angular-route": "^1.5.8"
+  }
+}

@@ -1,0 +1,124 @@
+<md-tree>
+  <md-branch branch-repeat="location in vm.locationData">
+    <div class="md-list-item-text">
+      <h3>{{location.name}}</h3>
+      <p>Location</p>
+    </div>
+
+    <md-branch branch-repeat="menu in location.menus">
+      <div class="md-list-item-text">
+        <h3>{{menu.name}}</h3>
+        <p>Menu</p>
+      </div>
+    </md-branch>
+  </md-branch>
+</md-tree>
+
+<!-- <md-tree>
+
+  <md-branch ng-repeat="location in vm.treeData">
+    <md-branch-item>
+      <md-branch-arrow></md-branch-arrow>
+      <md-checkbox ng-model="location.selected"></md-checkbox>
+      <div class="md-list-item-text" layout="column">
+        <h3>{{location.title}}</h3>
+        <p>subtitle</p>
+      </div>
+      <md-icon class="md-secondary" ng-click="null">edit</md-icon>
+    </md-branch-item>
+
+
+
+    <md-branch-expanded>
+
+      <md-branch ng-repeat="menu in location.menus">
+        <md-branch-item>
+          <md-branch-arrow></md-branch-arrow>
+          <md-checkbox ng-model="menu.selected"></md-checkbox>
+          <div class="md-list-item-text" layout="column">
+            <h3>{{menu.title}}</h3>
+            <p>subtitle</p>
+          </div>
+          <md-icon class="md-secondary" ng-click="null">edit</md-icon>
+        </md-branch-item>
+
+
+        <md-branch-expanded>
+
+          <md-branch ng-repeat="item in menu.items">
+            <md-branch-item>
+              <md-checkbox ng-model="menu.selected"></md-checkbox>
+              <div class="md-list-item-text" layout="column">
+                <h3>{{menu.title}}</h3>
+                <p>subtitle</p>
+              </div>
+              <md-icon class="md-secondary" ng-click="null">edit</md-icon>
+            </md-branch-item>
+          </md-branch>
+
+        </md-branch-expanded>
+      </md-branch>
+
+    </md-branch-expanded>
+  </md-branch>
+
+</md-tree>
+
+
+
+
+
+
+
+<md-tree md-data="vm.treeData">
+
+  <md-branch-templates data-label="item">
+    <md-branch name="location">
+      <md-branch-arrow></md-branch-arrow>
+      <md-checkbox ng-model="item.selected"></md-checkbox>
+      <div class="md-list-item-text" layout="column">
+        <h3>{{item.title}}</h3>
+        <p>subtitle</p>
+      </div>
+      <md-icon class="md-secondary" ng-click="null">edit</md-icon>
+    </md-branch>
+
+    <md-branch name="menu">
+      <md-branch-arrow></md-branch-arrow>
+      <md-checkbox ng-model="item.selected"></md-checkbox>
+      <div class="md-list-item-text" layout="column">
+        <h3>{{item.title}}</h3>
+        <p>subtitle</p>
+      </div>
+      <md-icon class="md-secondary" ng-click="null">edit</md-icon>
+    </md-branch>
+
+    <md-branch name="item">
+      <md-branch-arrow></md-branch-arrow>
+      <md-checkbox ng-model="item.selected"></md-checkbox>
+      <div class="md-list-item-text" layout="column">
+        <h3>{{item.title}}</h3>
+        <p>subtitle</p>
+      </div>
+      <md-icon class="md-secondary" ng-click="null">edit</md-icon>
+    </md-branch>
+  </md-branch-templates>
+
+
+
+
+
+  <md-branch template="location" ng-repeat="location in vm.treeData" ng-if="vm.root === 'location'">
+    <md-branch template="menu" ng-repeat="menue in location.menus">
+      <md-branch template="item" ng-repeat="menu_item in menue.menu_item"></md-branch>
+    </md-branch>
+    <md-branch template="item" ng-repeat="items in location.items"></md-branch>
+  </md-branch>
+
+  <md-branch template="menu" ng-repeat="menus in vm.menus" ng-if="vm.root === 'menus'">
+    <md-branch template="item" md-data="menu.menu_item"></md-branch>
+  </md-branch>
+
+  <md-branch name="item" ng-repeat="item in vm.items" ng-if="vm.root === 'items'"></md-branch>
+
+</md-tree> -->
