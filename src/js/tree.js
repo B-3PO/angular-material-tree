@@ -4,11 +4,18 @@ angular
 
 
 
-function treeDirective() {
+function treeDirective($mdTheming) {
   return {
     restrict: 'E',
-    controller: controller
+    controller: controller,
+    compile: compile
   };
+
+  function compile(tElement, tAttrs) {
+    return function postLink(scope, element, attr) {
+      $mdTheming(element);
+    };
+  }
 
   /*@ngInject*/
   function controller() {

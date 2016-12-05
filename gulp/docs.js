@@ -20,14 +20,17 @@ exports.build = function () {
   var stream2 = gulp.src('./bower_components/**/*.js')
     .pipe(gulp.dest(paths.docs+'bower_components/'));
 
-  return stream(srcJS, srcSCSS, srcHTML, stream2);
+  var stream3 = gulp.src('./bower_components/**/*.css')
+    .pipe(gulp.dest(paths.docs+'bower_components/'));
+
+  return stream(srcJS, srcSCSS, srcHTML, stream2, stream3);
 }
 
 
 exports.inject = function () {
-  var component = gulp.src(paths.docs + 'angular-material-tree/**/*.js', {read: false});
-  var scripts = gulp.src([paths.docs + '**/*.js', '!'+paths.docs + 'angular-material-tree/**', '!'+paths.docs + 'bower_components/**'], {read: false});
-  var css = gulp.src(paths.docs+'**/*.css', {read: false});
+  var component = gulp.src([paths.docs + 'angular-material-tree/index.js', paths.docs + '_theme.js', paths.docs + 'angular-material-tree/**/*.js'], {read: false});
+  var scripts = gulp.src(['!'+paths.docs + '_theme.js', paths.docs + '**/*.js', '!'+paths.docs + 'angular-material-tree/**', '!'+paths.docs + 'bower_components/**', '!'+paths.docs+'theme.js'], {read: false});
+  var css = gulp.src(paths.docs+'style.css', {read: false});
 
   return gulp.src(paths.docsSrc+'index.html')
     .pipe(gulp.dest(paths.docs))
@@ -47,19 +50,4 @@ exports.inject = function () {
         }))
         .pipe(gulp.dest(paths.docs));
     });
-
-  // return gulp.src(paths.docs + 'index.html')
-  //   .pipe(inject(css, {
-  //     name: 'css',
-  //     relative: true
-  //   }))
-  //   .pipe(inject(component, {
-  //     name: 'component',
-  //     relative: true
-  //   }))
-  //   .pipe(inject(scripts, {
-  //     name: 'scripts',
-  //     relative: true
-  //   }))
-  //   .pipe(gulp.dest(paths.docs));
 }

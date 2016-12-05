@@ -1,0 +1,191 @@
+$baseline-grid: 8px !default;
+$list-item-primary-icon-width: $baseline-grid * 3 !default;
+$list-item-height: 6 * $baseline-grid !default;
+
+
+md-tree {
+  &:not(.md-no-animation) {
+    md-branch .md-branch-expand-icon {
+      transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+  }
+
+  md-branch {
+    .md-branch-expand-icon {
+      transform: rotate(90deg);
+      // margin: auto 0;
+      margin-right: 18px;
+    }
+  }
+
+  &.md-open > md-branch .md-branch-expand-icon {
+    transform: rotate(-90deg);
+  }
+}
+
+
+
+md-branch {
+  position: relative;
+
+  &,
+  .md-branch-inner {
+    // Layout [flex layout-align='start center']
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    min-height: $list-item-height;
+    height: auto;
+
+    // Layout for controls in primary or secondary divs, or auto-infered first child
+    & > div.md-primary > md-icon,
+    & > div.md-secondary > md-icon,
+    & > md-icon:first-child,
+    > md-icon.md-secondary {
+      width: $list-item-primary-icon-width;
+      margin-top: 16px;
+      margin-bottom: 12px;
+      box-sizing: content-box;
+    }
+    & > div.md-primary > md-checkbox,
+    & > div.md-secondary > md-checkbox,
+    & > md-checkbox,
+    md-checkbox.md-secondary {
+      align-self: center;
+      .md-label {
+        display: none;
+      }
+    }
+
+
+    & > md-checkbox {
+      width: 3 * $baseline-grid;
+      // @include rtl(margin-left, 3px, 29px);
+      // @include rtl(margin-right, 29px, 3px);
+      margin-top: 16px;
+    }
+
+    .md-secondary-container {
+      display: flex;
+      align-items: center;
+
+      // Per W3C: https://www.w3.org/TR/css-flexbox/#flex-common
+      // By default, flex items won’t shrink below their minimum content size.
+      // Safari doesn't follow that specification due to a bug and expects the developer to
+      // explicitly disable flex shrinking.
+      flex-shrink: 0;
+
+      // Using margin auto to move them to the end of the list item is more elegant, because it has
+      // a lower priority than a flex filler and isn't introducing any overflow issues.
+      // The margin on the top is important to align multiple secondary items vertically.
+      margin: auto;
+
+      // @include rtl(margin-right, 0, auto);
+      // @include rtl(margin-left, auto, 0);
+
+      .md-button, .md-icon-button {
+        &:last-of-type {
+          // Reset 6px margin for the button.
+          // @include rtl-prop(margin-right, margin-left, 0, auto);
+        }
+      }
+
+      md-checkbox {
+        margin-top: 0;
+        margin-bottom: 0;
+
+        &:last-child {
+          width: 3 * $baseline-grid;
+          // @include rtl-prop(margin-right, margin-left, 0, auto);
+        }
+      }
+
+      md-switch {
+        margin-top: 0;
+        margin-bottom: 0;
+
+        // @include rtl-prop(margin-right, margin-left, -6px, auto);
+      }
+    }
+
+    & > p, & > .md-list-item-inner > p {
+      flex: 1 1 auto;
+      margin: 0;
+    }
+  }
+
+
+  &.md-2-line,
+  &.md-3-line {
+    &, & > .md-no-style {
+      align-items: flex-start;
+      justify-content: center;
+
+      .md-branch-text {
+        flex: 1 1 auto;
+        margin: auto;
+        text-overflow: ellipsis;
+        overflow: hidden;
+
+        h3 {
+          font-size: 16px;
+          font-weight: 400;
+          letter-spacing: 0.010em;
+          margin: 0;
+          line-height: 1.2em;
+          overflow: hidden;
+          white-space: nowrap;
+          text-overflow: ellipsis;
+        }
+        h4 {
+          font-size: 14px;
+          letter-spacing: 0.010em;
+          margin: 3px 0 1px;
+          font-weight: 400;
+          line-height: 1.2em;
+          overflow: hidden;
+          white-space: nowrap;
+          text-overflow: ellipsis;
+        }
+        p {
+          font-size: 14px;
+          font-weight: 500;
+          letter-spacing: 0.010em;
+          margin: 0;
+          line-height: 1.6em;
+        }
+      }
+    }
+  }
+
+  &.md-2-line {
+    &, & > .md-no-style {
+      height: auto;
+      min-height: 72px;
+
+      > .md-avatar, .md-avatar-icon {
+        margin-top: $baseline-grid * 1.5;
+      }
+
+      > .md-branch-expand-icon:first-child {
+        align-self: flex-start;
+      }
+
+      .md-list-item-text {
+        flex: 1 1 auto;
+      }
+    }
+  }
+
+  &.md-3-line {
+    &, & > .md-no-style {
+      height: auto;
+      min-height: 88px;
+
+      > .md-branch-expand-icon:first-child,
+      > .md-avatar {
+        margin-top: $baseline-grid * 2;
+      }
+    }
+  }
+}

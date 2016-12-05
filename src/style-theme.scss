@@ -1,0 +1,17 @@
+md-tree {
+  // background: '{{background-hue-1}}';
+
+  md-branch .md-branch-expand svg {
+    fill: '{{foreground-3}}';
+  }
+
+  md-branch.md-2-line .md-branch-text,
+  md-branch.md-3-line .md-branch-text {
+    h3, h4 {
+      color: '{{foreground-1}}';
+    }
+    p {
+      color: '{{foreground-2}}';
+    }
+  }
+}

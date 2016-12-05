@@ -1,5 +1,6 @@
 angular.module('testApp', [
   'ngRoute',
+  'ngMaterial',
   'angular-material-tree'
 ])
   .config(configApp);

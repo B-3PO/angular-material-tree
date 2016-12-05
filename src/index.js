@@ -6,4 +6,10 @@
  * Expander Component
  */
 angular
-  .module('angular-material-tree', []);
+  .module('angular-material-tree', ['material.core.theming'])
+  .config(mdTreeTheme);
+
+/*@ngInject*/
+function mdTreeTheme($mdThemingProvider, TREE_THEME) {
+  $mdThemingProvider.registerStyles(TREE_THEME);
+}

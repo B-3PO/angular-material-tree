@@ -1,12 +1,13 @@
 <md-tree>
-  <md-branch branch-repeat="location in vm.locationData">
-    <div class="md-list-item-text">
+  <md-branch branch-repeat="location in vm.locationData" class="md-2-line">
+    <md-branch-arrow></md-branch-arrow>
+    <div class="md-branch-text">
       <h3>{{location.name}}</h3>
       <p>Location</p>
     </div>
 
-    <md-branch branch-repeat="menu in location.menus">
-      <div class="md-list-item-text">
+    <md-branch branch-repeat="menu in location.menus" class="md-2-line">
+      <div class="md-branch-text">
         <h3>{{menu.name}}</h3>
         <p>Menu</p>
       </div>
