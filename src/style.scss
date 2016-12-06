@@ -5,21 +5,20 @@ $list-item-height: 6 * $baseline-grid !default;
 
 md-tree {
   &:not(.md-no-animation) {
-    md-branch .md-branch-expand-icon {
+    md-branch .md-branch-icon {
       transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
     }
   }
 
   md-branch {
-    .md-branch-expand-icon {
+    .md-branch-icon {
       transform: rotate(90deg);
-      // margin: auto 0;
-      margin-right: 18px;
+      margin: auto 18px;
     }
-  }
 
-  &.md-open > md-branch .md-branch-expand-icon {
-    transform: rotate(-90deg);
+    &.md-open > .md-branch-inner > .md-branch-icon {
+      transform: rotate(-90deg);
+    }
   }
 }
 
@@ -27,8 +26,11 @@ md-tree {
 
 md-branch {
   position: relative;
+  display: block;
+  // display: flex;
+  // flex-direction: column;
+  cursor: pointer;
 
-  &,
   .md-branch-inner {
     // Layout [flex layout-align='start center']
     display: flex;
@@ -162,6 +164,9 @@ md-branch {
     &, & > .md-no-style {
       height: auto;
       min-height: 72px;
+      & .md-branch-inner {
+        min-height: 72px;
+      }
 
       > .md-avatar, .md-avatar-icon {
         margin-top: $baseline-grid * 1.5;
@@ -182,9 +187,49 @@ md-branch {
       height: auto;
       min-height: 88px;
 
+      & .md-branch-inner {
+        min-height: 88px;
+      }
+
       > .md-branch-expand-icon:first-child,
       > .md-avatar {
         margin-top: $baseline-grid * 2;
+      }
+    }
+  }
+}
+
+
+md-branch {
+  & > .md-branch-container {
+    display: none;
+    padding-left: 36px; // indentation
+  }
+
+  &.md-open {
+    & > .md-branch-container {
+      display: block;
+    }
+  }
+
+  & > .md-branch-container {
+    &.md-overflow {
+      overflow: hidden;
+    }
+  }
+
+  &:not(.md-no-animation) {
+    & > .md-branch-container {
+      &.md-show {
+        display: block;
+        transition: max-height 0.06s cubic-bezier(0.25, 0.8, 0.25, 1),
+                    opacity 0.06s cubic-bezier(0.25, 0.8, 0.25, 1);
+      }
+
+      &.md-hide {
+        display: block;
+        transition: max-height 0.12s cubic-bezier(0.25, 0.8, 0.25, 1),
+                    opacity 0.12s cubic-bezier(0.25, 0.8, 0.25, 1);
       }
     }
   }

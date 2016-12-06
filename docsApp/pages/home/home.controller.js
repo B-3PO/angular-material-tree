@@ -36,6 +36,10 @@ function HomeController($scope) {
           name: 'menu Three'
         }
       ]
+    },
+    {
+      id: 5,
+      name: 'Smashburger Mos'
     }
   ];
 }
