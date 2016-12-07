@@ -25,7 +25,19 @@ function HomeController($scope) {
       menus: [
         {
           id: 1,
-          name: 'menu One'
+          name: 'menu One',
+          items: [
+            {
+              id: 1,
+              name: 'Item One',
+              price: '12.00'
+            },
+            {
+              id: 2,
+              name: 'Item two',
+              price: '12.00'
+            }
+          ]
         },
         {
           id: 2,
@@ -36,10 +48,6 @@ function HomeController($scope) {
           name: 'menu Three'
         }
       ]
-    },
-    {
-      id: 5,
-      name: 'Smashburger Mos'
     }
   ];
 }

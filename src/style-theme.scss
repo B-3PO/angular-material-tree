@@ -1,12 +1,28 @@
 md-tree {
-  // background: '{{background-hue-1}}';
-
   md-branch {
-    
-  }
+    .md-branch-inner {
+      background-color: '{{background-hue-1}}';
+    }
 
-  md-branch .md-branch-expand svg {
-    fill: '{{foreground-3}}';
+    .md-branch-icon svg {
+      fill: '{{foreground-2}}';
+    }
+
+    &.md-tip {
+      .md-branch-inner {
+        background-color: '{{background-200}}';
+      }
+
+      .md-branch-icon svg {
+        fill: '{{foreground-4}}';
+      }
+    }
+
+    &.md-open {
+      & > .md-branch-inner {
+        border-bottom-color: '{{foreground-4}}';
+      }
+    }
   }
 
   md-branch.md-2-line .md-branch-text,

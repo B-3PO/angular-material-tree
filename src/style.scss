@@ -1,6 +1,7 @@
 $baseline-grid: 8px !default;
 $list-item-primary-icon-width: $baseline-grid * 3 !default;
 $list-item-height: 6 * $baseline-grid !default;
+$icon-margin: 18px;
 
 
 md-tree {
@@ -11,12 +12,25 @@ md-tree {
   }
 
   md-branch {
-    .md-branch-icon {
-      transform: rotate(90deg);
-      margin: auto 18px;
+    .md-branch-icon-container {
+      display: flex;
+      flex-direction: column;
+      min-height: 72px;
+      width: 60px;
+      justify-content: center;
+
+      .md-branch-icon {
+        margin: 0 auto;
+        transform: rotate(90deg);
+        pointer-events: none;
+      }
+
+      & + .checkbox-container .md-container {
+        margin-left: 0;
+      }
     }
 
-    &.md-open > .md-branch-inner > .md-branch-icon {
+    &.md-open > .md-branch-inner > .md-branch-icon-container .md-branch-icon {
       transform: rotate(-90deg);
     }
   }
@@ -27,9 +41,6 @@ md-tree {
 md-branch {
   position: relative;
   display: block;
-  // display: flex;
-  // flex-direction: column;
-  cursor: pointer;
 
   .md-branch-inner {
     // Layout [flex layout-align='start center']
@@ -38,6 +49,12 @@ md-branch {
     align-items: center;
     min-height: $list-item-height;
     height: auto;
+    border-bottom: 1px solid transparent;
+
+    cursor: pointer;
+    &.md-tip {
+      cursor: default;
+    }
 
     // Layout for controls in primary or secondary divs, or auto-infered first child
     & > div.md-primary > md-icon,
@@ -233,4 +250,152 @@ md-branch {
       }
     }
   }
+}
+
+
+
+
+
+// --- MIXINS from ngMaterial ---
+
+$select-option-padding: 16px !default;
+$checkbox-width: 20px !default;
+$checkbox-height: $checkbox-width !default;
+$checkbox-border-radius: 2px !default;
+$checkbox-border-width: 2px !default;
+
+// This mixin allows a user to use the md-checkbox css outside of the
+// md-checkbox directive.
+// See src/components/select/select.scss for an example.
+@mixin checkbox-container(
+  $checkedSelector: '.md-checked',
+  $width: $checkbox-width,
+  $height: $checkbox-height,
+  $border-width: $checkbox-border-width,
+  $border-radius: $checkbox-border-radius) {
+  .md-container {
+    position: relative;
+    top: 50%;
+    box-sizing: border-box;
+    display: inline-block;
+    width: $width;
+    height: $height;
+    @include rtl(left, 0, auto);
+    @include rtl(right, auto, 0);
+    margin: auto $icon-margin;
+
+    &:before {
+      box-sizing: border-box;
+      background-color: transparent;
+      border-radius: 50%;
+      content: '';
+      position: absolute;
+      display: block;
+      height: auto;
+      left: 0;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      transition: all 0.5s;
+      width: auto;
+    }
+
+    &:after {
+      box-sizing: border-box;
+      content: '';
+      position: absolute;
+      top: -10px;
+      right: -10px;
+      bottom: -10px;
+      left: -10px;
+    }
+
+    .md-ripple-container {
+      position: absolute;
+      display: block;
+      width: auto;
+      height: auto;
+      left: -15px;
+      top: -15px;
+      right: -15px;
+      bottom: -15px;
+    }
+  }
+
+  // unchecked
+  .md-icon {
+    box-sizing: border-box;
+    transition: 240ms;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: $width;
+    height: $height;
+    border-width: $border-width;
+    border-style: solid;
+    border-radius: $border-radius;
+  }
+
+  &#{$checkedSelector} .md-icon {
+    border-color: transparent;
+
+    &:after {
+      box-sizing: border-box;
+      transform: rotate(45deg);
+      position: absolute;
+      left: $width / 3 - $border-width;
+      top: $width / 9 - $border-width;
+      display: table;
+      width: $width / 3;
+      height: $width * 2 / 3;
+      border-width: $border-width;
+      border-style: solid;
+      border-top: 0;
+      border-left: 0;
+      content: '';
+    }
+  }
+
+  // disabled
+  &[disabled] {
+    cursor: default;
+  }
+
+  &.md-indeterminate .md-icon {
+    &:after {
+      box-sizing: border-box;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      display: table;
+      width: $width * 0.6;
+      height: $border-width;
+      border-width: $border-width;
+      border-style: solid;
+      border-top: 0;
+      border-left: 0;
+      content: '';
+    }
+  }
+}
+
+
+@mixin rtl($prop, $ltr-value, $rtl-value) {
+  #{$prop}: $ltr-value;
+  [dir=rtl] & {
+    #{$prop}: $rtl-value;
+  }
+}
+
+
+// Checkbox style
+$select-option-padding: 16px !default;
+$checkbox-width: 20px !default;
+$checkbox-height: $checkbox-width !default;
+$checkbox-border-radius: 2px !default;
+$checkbox-border-width: 2px !default;
+
+md-branch.md-checkbox-enabled {
+  @include checkbox-container('[selected]');
 }

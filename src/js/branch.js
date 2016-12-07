@@ -1,27 +1,31 @@
 angular
   .module('angular-material-tree')
-  .directive('mdBranch', branchDirective);
+  .directive('mdBranch', branchDirective)
+  .controller('BranchController', branchController);
 
 
-var BRANCH_ARROW_TEMPLATE = '<div class="md-branch-icon">'+
-  '<svg fill="#000000" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">'+
+var CHECKBOX_SELECTION_INDICATOR = angular.element('<div class="checkbox-container"><div class="md-container"><div class="md-icon"></div></div></div>');
+var BRANCH_ARROW_TEMPLATE = angular.element('<div class="md-branch-icon-container">'+
+  '<div class="md-branch-icon">'+
+    '<svg fill="#000000" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">'+
       '<path d="M8.59 16.34l4.58-4.59-4.58-4.59L10 5.75l6 6-6 6z"/>'+
       '<path d="M0-.25h24v24H0z" fill="none"/>'+
-  '</svg>'+
-'</div>';
+    '</svg>'+
+  '</div>'+
+'</div>');
 
 /*@ngInject*/
 function branchDirective($parse, $document, $compile) {
   return {
     restrict: 'E',
     multiElement: true,
-    require: ['^^mdTree', 'mdBranch', '?^mdBranch', '?^mdBranchTemplates'],
+    require: ['?^^mdTree', 'mdBranch', '?^mdBranch', '?^mdBranchTemplates'],
     priority: 1000,
     terminal: true,
     transclude: 'element',
     $$tlb: true,
     compile: compile,
-    controller: controller
+    controller: 'BranchController'
   };
 
 
@@ -152,27 +156,7 @@ function branchDirective($parse, $document, $compile) {
       function updateBlock(block, index) {
         blocks[index] = block;
 
-        // if (index % 2 === 1) { block.element.addClass('br-odd'); }
-        // else { block.element.removeClass('br-odd'); }
-
-        // NOTE this might cause problems when applying a new scope
-        // place contents into containers to display items correctly
-        // this is only done once
-        if (block.new) {
-          var innerContainer = angular.element('<div class="md-branch-inner">');
-          var branchContainer = angular.element('<div class="md-branch-container">');
-          innerContainer.append(angular.element(BRANCH_ARROW_TEMPLATE));
-          Array.prototype.slice.call(block.element[0].childNodes).forEach(function (node) {
-            if (node.nodeType === 8 && node.nodeValue.trim() === 'mdBranch:') {
-              branchContainer.append(node);
-            } else {
-              innerContainer.append(node);
-            }
-          });
-          block.element.append(innerContainer);
-          block.element.append(branchContainer);
-        }
-
+        if (block.new) { updateNewBlock(block); }
         if (!block.new &&
             (block.scope.$index === index && block.scope[repeatName] === items[index])) {
           return;
@@ -187,6 +171,41 @@ function branchDirective($parse, $document, $compile) {
         // This might break some directives, but I'm going to try it for now.
         if (!scope.$root.$$phase) {
           block.scope.$digest();
+        }
+      }
+
+
+      // NOTE this might cause problems when applying a new scope
+      // place contents into containers to display items correctly
+      // this is only done once
+      function updateNewBlock(block) {
+        var isSelectable = block.element.attr('select') !== undefined;
+        // branch contents
+        var innerContainer = angular.element('<div class="md-branch-inner">');
+        // nested branched
+        var branchContainer = angular.element('<div class="md-branch-container">');
+        innerContainer.append(BRANCH_ARROW_TEMPLATE.clone());
+        if (isSelectable) {
+          block.element.addClass('md-checkbox-enabled');
+          innerContainer.append(CHECKBOX_SELECTION_INDICATOR.clone());
+        }
+        Array.prototype.slice.call(block.element[0].childNodes).forEach(function (node) {
+          if (node.nodeType === 8 && node.nodeValue.trim() === 'mdBranch:') {
+            branchContainer.append(node);
+          } else {
+            innerContainer.append(node);
+          }
+        });
+        block.element.append(innerContainer);
+
+
+        // add branches
+        if (branchContainer[0].childNodes.length) {
+          block.element.append(branchContainer);
+
+        // if no more branches then mark as tip
+        } else {
+          block.element.addClass('md-tip');
         }
       }
 
@@ -227,138 +246,170 @@ function branchDirective($parse, $document, $compile) {
     };
   }
 
-
-  /*@ngInject*/
-  function controller($scope, $mdUtil, $animateCss) {
-    /*jshint validthis: true*/
-    var vm = this;
-    var isOpen = false;
-
-    // injected $element is holds refernce to the comment. heres how to get arround this
-    var $element = $scope.$element;
-
-    // vm.startWatching = startWatching; set in link function
-    // vm.killWatching = killWatching; set in link function
-    vm.setOpenState = setOpenState;
+}
 
 
-    if (!$element) { return; }
-    var arrow = $element[0].querySelector('.md-branch-icon');
-    var ngClick = $element.attr('ng-click');
 
-    if (!ngClick) {
-      $element.on('click', toggleBranch);
+
+
+
+
+
+// --- Controller ---
+
+
+/*@ngInject*/
+function branchController($scope, $mdUtil, $animateCss) {
+  /*jshint validthis: true*/
+  var vm = this;
+  var isOpen = false;
+
+  // injected $element is holds refernce to the comment. heres how to get arround this
+  var $element = $scope.$element;
+
+  // vm.startWatching = startWatching; set in link function
+  // vm.killWatching = killWatching; set in link function
+  vm.setOpenState = setOpenState;
+
+
+  if (!$element) { return; }
+  var arrow = $element[0].querySelector('.md-branch-icon');
+  var ngClick = $element.attr('ng-click');
+
+  if (!ngClick) {
+    $element.on('click', handleClick);
+  }
+
+  function handleClick(e) {
+    console.log(e.target);
+    // toggel branch
+    if (e.target.classList.contains('md-branch-icon-container')) {
+      toggleBranchClick(e);
+      return;
     }
 
-    function setOpenState(value) {
-      if (value === isOpen) { return; }
-      isOpen = value;
-      if (isOpen === true) { open(true); }
-      else { close(true); }
-    }
-
-    function toggleBranch(e, noAnimation) {
-      if (!branchContainsElement(e.target)) { return; }
-
-      if (isOpen !== true) { open(noAnimation); }
-      else { close(noAnimation); }
-    }
-
-    function branchContainsElement(el) {
-      var parent = el.parentNode;
-      var innerContainer = $element[0].querySelector('.md-branch-inner');
-      while (parent && parent !== document.body) {
-        if (parent === innerContainer) { return true; }
-        if (parent.nodeName === 'MD-BRANCH') { return false; }
-        parent = parent.parentNode;
-      }
-      return false;
-    }
-
-
-    function open(noAnimation) {
-      if (isOpen) { return; }
-      isOpen = true;
-      reconnectScope();
-      vm.startWatching();
-      $element.toggleClass('md-no-animation', noAnimation || false);
-
-      $mdUtil.nextTick(function () {
-        var container = angular.element($element[0].querySelector('.md-branch-container'));
-        $element.addClass('md-open');
-        container.addClass('md-overflow md-show');
-
-        $animateCss(container, {
-          from: {'max-height': '0px', opacity: 0},
-          to: {'max-height': getHeight(), opacity: 1}
-        })
-        .start()
-        .then(function () {
-          container.css('max-height', 'none');
-          container.removeClass('md-overflow md-show');
-        });
-      });
-    }
-
-    function close(noAnimation) {
-      if (!isOpen) { return; }
-      isOpen = false;
-      vm.killWatching();
-      $element.toggleClass('md-no-animation', noAnimation || false);
-
-      $mdUtil.nextTick(function () {
-        var container = angular.element($element[0].querySelector('.md-branch-container'));
-        $element.removeClass('md-open');
-        container.addClass('md-overflow md-hide');
-        $animateCss(container, {
-          from: {'max-height': getHeight(), opacity: 1},
-          to: {'max-height': '0px', opacity: 0}
-        })
-        .start()
-        .then(function () {
-          container.removeClass('md-overflow md-hide');
-          disconnectScope();
-          // TODO disconnect elements from scope
-        });
-      });
-    }
-
-    function getHeight() {
-      return $element[0].scrollHeight + 'px';
-    }
-
-
-    // remove scope from parents reference so it is not used in digest
-    function disconnectScope() {
-      if ($scope.$$destroyed) return;
-
-      var parent = $scope.$parent;
-      $scope.$$disconnected = true;
-
-      // See Scope.$destroy
-      if (parent.$$childHead === $scope) parent.$$childHead = $scope.$$nextSibling;
-      if (parent.$$childTail === $scope) parent.$$childTail = $scope.$$prevSibling;
-      if ($scope.$$prevSibling) { $scope.$$prevSibling.$$nextSibling = $scope.$$nextSibling; }
-      if ($scope.$$nextSibling) { $scope.$$nextSibling.$$prevSibling = $scope.$$prevSibling; }
-      $scope.$$nextSibling = $scope.$$prevSibling = null;
-    }
-
-    // recoonect disconnected scope so it is used in the digest
-    function reconnectScope() {
-      if (!$scope.$$disconnected) return;
-
-      var child = $scope;
-      var parent = child.$parent;
-      child.$$disconnected = false;
-      // See Scope.$new for this logic...
-      child.$$prevSibling = parent.$$childTail;
-      if (parent.$$childHead) {
-        parent.$$childTail.$$nextSibling = child;
-        parent.$$childTail = child;
+    // handle select
+    var isSelect = $element.attr('select') !== undefined;
+    if (isSelect) {
+      var selected = $element.attr('selected') !== undefined;
+      $element.attr('selected', !selected);
+      if (e.target.classList.contains('md-container')) { // clicked on checkbox
+        // deselect all and select this branch
       } else {
-        parent.$$childHead = parent.$$childTail = child;
+        // if multiple is enabled add this to selection
+        // otherwise single select
       }
+
+    } else {
+      toggleBranchClick(e)
     }
   }
 
+  function setOpenState(value) {
+    if (value === isOpen) { return; }
+    isOpen = value;
+    if (isOpen === true) { open(true); }
+    else { close(true); }
+  }
+
+  function toggleBranchClick(e) {
+    if (!branchContainsElement(e.target)) { return; }
+    if (isOpen !== true) { open(); }
+    else { close(); }
+  }
+
+  function branchContainsElement(el) {
+    var parent = el.parentNode;
+    var innerContainer = $element[0].querySelector('.md-branch-inner');
+    while (parent && parent !== document.body) {
+      if (parent === innerContainer) { return true; }
+      if (parent.nodeName === 'MD-BRANCH') { return false; }
+      parent = parent.parentNode;
+    }
+    return false;
+  }
+
+
+  function open(noAnimation) {
+    if (isOpen) { return; }
+    isOpen = true;
+    reconnectScope();
+    vm.startWatching();
+    $element.toggleClass('md-no-animation', noAnimation || false);
+
+    $mdUtil.nextTick(function () {
+      var container = angular.element($element[0].querySelector('.md-branch-container'));
+      $element.addClass('md-open');
+      container.addClass('md-overflow md-show');
+
+      $animateCss(container, {
+        from: {'max-height': '0px', opacity: 0},
+        to: {'max-height': getHeight(), opacity: 1}
+      })
+      .start()
+      .then(function () {
+        container.css('max-height', 'none');
+        container.removeClass('md-overflow md-show');
+      });
+    });
+  }
+
+  function close(noAnimation) {
+    if (!isOpen) { return; }
+    isOpen = false;
+    vm.killWatching();
+    $element.toggleClass('md-no-animation', noAnimation || false);
+
+    $mdUtil.nextTick(function () {
+      var container = angular.element($element[0].querySelector('.md-branch-container'));
+      $element.removeClass('md-open');
+      container.addClass('md-overflow md-hide');
+      $animateCss(container, {
+        from: {'max-height': getHeight(), opacity: 1},
+        to: {'max-height': '0px', opacity: 0}
+      })
+      .start()
+      .then(function () {
+        container.removeClass('md-overflow md-hide');
+        disconnectScope();
+      });
+    });
+  }
+
+  function getHeight() {
+    return $element[0].scrollHeight + 'px';
+  }
+
+
+  // remove scope from parents reference so it is not used in digest
+  function disconnectScope() {
+    if ($scope.$$destroyed) return;
+
+    var parent = $scope.$parent;
+    $scope.$$disconnected = true;
+
+    // See Scope.$destroy
+    if (parent.$$childHead === $scope) parent.$$childHead = $scope.$$nextSibling;
+    if (parent.$$childTail === $scope) parent.$$childTail = $scope.$$prevSibling;
+    if ($scope.$$prevSibling) { $scope.$$prevSibling.$$nextSibling = $scope.$$nextSibling; }
+    if ($scope.$$nextSibling) { $scope.$$nextSibling.$$prevSibling = $scope.$$prevSibling; }
+    $scope.$$nextSibling = $scope.$$prevSibling = null;
+  }
+
+  // recoonect disconnected scope so it is used in the digest
+  function reconnectScope() {
+    if (!$scope.$$disconnected) return;
+
+    var child = $scope;
+    var parent = child.$parent;
+    child.$$disconnected = false;
+    // See Scope.$new for this logic...
+    child.$$prevSibling = parent.$$childTail;
+    if (parent.$$childHead) {
+      parent.$$childTail.$$nextSibling = child;
+      parent.$$childTail = child;
+    } else {
+      parent.$$childHead = parent.$$childTail = child;
+    }
+  }
 }

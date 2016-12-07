@@ -1,5 +1,5 @@
 <md-tree>
-  <md-branch branch-repeat="location in vm.locationData" class="md-2-line">
+  <md-branch branch-repeat="location in vm.locationData" class="md-2-line" select>
     <div class="md-branch-text">
       <h3>{{location.name}}</h3>
       <p>Location</p>
@@ -10,9 +10,34 @@
         <h3>{{menu.name}}</h3>
         <p>Menu</p>
       </div>
+
+      <md-branch branch-repeat="item in menu.items" class="md-2-line">
+        <div class="md-branch-text">
+          <h3>{{item.name}}</h3>
+          <p>Item</p>
+        </div>
+      </md-branch>
     </md-branch>
   </md-branch>
 </md-tree>
+
+
+
+<!-- <md-list>
+  <md-list-item ng-repeat="location in vm.locationData">
+    <div class="md-list-item-text">
+      <h3>{{location.name}}</h3>
+      <p>Location</p>
+    </div>
+
+    <md-list-item ng-repeat="menu in location.menus">
+      <div class="md-list-item-text">
+        <h3>{{location.name}}</h3>
+        <p>Location</p>
+      </div>
+    </md-list-item>
+  </md-list-item>
+</md-list> -->
 
 <!-- <md-tree>
 

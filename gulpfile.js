@@ -48,6 +48,6 @@ gulp.task('serve', serve({
 gulp.task('watch', function () {
   gulp.watch(paths.scripts, ['jsDev']);
   gulp.watch(paths.css, ['cssDev']);
-  gulp.watch(paths.docsSrc, ['docsBuild']);
+  gulp.watch(paths.docsSrc+'**/*', ['docsBuild']);
   gulp.watch(paths.appPartials, ['docsBuild']);
 });
