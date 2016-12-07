@@ -1,7 +1,6 @@
 $baseline-grid: 8px !default;
 $list-item-primary-icon-width: $baseline-grid * 3 !default;
 $list-item-height: 6 * $baseline-grid !default;
-$icon-margin: 18px;
 
 
 md-tree {
@@ -282,7 +281,7 @@ $checkbox-border-width: 2px !default;
     height: $height;
     @include rtl(left, 0, auto);
     @include rtl(right, auto, 0);
-    margin: auto $icon-margin;
+    margin: auto 24px;
 
     &:before {
       box-sizing: border-box;
