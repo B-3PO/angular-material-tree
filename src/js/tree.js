@@ -19,10 +19,11 @@ function treeDirective($mdTheming, $mdUtil) {
 
       // make ngModel available to controller
       var ngModelCtrl = ctrls[1];
+
+      // create fake ngModel so code runs as normal
       if (!ngModelCtrl) {
         ngModelCtrl = $mdUtil.fakeNgModel();
-        ngModelCtrl.$validators = [];
-        ngModelCtrl.$setPristine = angular.noop;
+        ngModelCtrl.$validators = []; //$mdUtil.fakeNgModel is missing `$validators`
       }
       ctrls[0].init(ngModelCtrl, attr.ngModel);
     };
@@ -49,7 +50,6 @@ function treeDirective($mdTheming, $mdUtil) {
 
       $scope.$watchCollection(binding, function(value) {
         if (validateArray(value)) { modelRender(value); }
-        vm.ngModel.$setPristine();
       });
 
       ngModel.$isEmpty = function(value) {
@@ -87,11 +87,11 @@ function treeDirective($mdTheming, $mdUtil) {
 
 
     function registerBranch(hashKey, ctrl) {
-      if (branches[branch] !== undefined) {
-        console.error('This branch was already registered, ignoring.');
+      if (branches[hashKey] !== undefined) {
+        console.warn('This branch was already registered, ignoring.');
         return;
       }
-      branches[branch] = ctrl;
+      branches[hashKey] = ctrl;
     }
 
     function unregisterBranch(hashKey) {
@@ -119,10 +119,12 @@ function treeDirective($mdTheming, $mdUtil) {
     function deselect(hashKey) {
       var branch = branches[hashKey];
       if (branch !== undefined) { branch.setSelected(false); }
+      vm.selected[hashKey] = undefined;
       delete vm.selected[hashKey];
     }
 
     function refreshViewValue() {
+      console.log('refreshViewValue', vm.selected)
       var branchValue;
       var newValue;
       var prevValue;
@@ -131,7 +133,7 @@ function treeDirective($mdTheming, $mdUtil) {
       var hashKey = hashKeys.pop();
 
       while (hashKey !== undefined) {
-        branchValue = branches[hashKey];
+        branchValue = vm.selected[hashKey];
         if (branchValue) {
           values.push(branchValue);
         }
@@ -141,7 +143,7 @@ function treeDirective($mdTheming, $mdUtil) {
 
       newValue = values;
       prevValue = vm.ngModel.$modelValue;
-      if (!angular.equals(prevValue, newValue)) {
+      if (prevValue !== newValue) {
         vm.ngModel.$setViewValue(newValue);
         vm.ngModel.$render();
       }

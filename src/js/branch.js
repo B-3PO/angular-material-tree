@@ -19,7 +19,7 @@ function branchDirective($parse, $document, $compile) {
   return {
     restrict: 'E',
     multiElement: true,
-    require: ['mdBranch', '?^mdBranch', '?^^mdTree', '?^mdBranchTemplates'],
+    require: ['mdBranch', '?^mdBranch', '?^mdTree', '?^mdBranchTemplates'],
     priority: 1000,
     terminal: true,
     transclude: 'element',
@@ -47,7 +47,6 @@ function branchDirective($parse, $document, $compile) {
       var itemsLength = 0;
       var isUpdating = false;
       var ctrl = ctrls[0];
-      ctrl.treeCtrl = ctrls[2];
       var parentBranchCtrl = ctrls[1];
       if (isOpen) { startWatching(); }
 
@@ -64,6 +63,12 @@ function branchDirective($parse, $document, $compile) {
       ctrl.startWatching = startWatching;
       ctrl.killWatching = killWatching;
       ctrl.setOpenState(isOpen);
+
+      // add tree controller and register if available
+      if (ctrls[2]) {
+        ctrl.treeCtrl = ctrls[2];
+        ctrl.registerBranch();
+      }
 
 
       function updateBranch(newItems, oldItems) {
@@ -84,11 +89,7 @@ function branchDirective($parse, $document, $compile) {
           lengthChanged = true;
           itemsLength = _itemsLength;
         }
-
         items = newItems;
-        // if (newItems !== oldItems || lengthChanged === true) {
-        //   // update indexes
-        // }
 
 
         // Detach and pool any blocks that are no longer in the viewport.
@@ -103,16 +104,8 @@ function branchDirective($parse, $document, $compile) {
           i += 1;
         }
 
-        // // Collect blocks at the top.
-        i = 0;
-        // while (i < itemsLength && (blocks[i] === null || blocks[i] === undefined)) {
-        //   _block = getBlock(i);
-        //   updateBlock(_block, i);
-        //   newBlocks.push(_block);
-        //   i += 1;
-        // }
-
         // Update blocks that are already rendered.
+        i = 0;
         while ((blocks[i] !== null && blocks[i] !== undefined)) {
           updateBlock(blocks[i], i);
           i += 1;
@@ -128,20 +121,10 @@ function branchDirective($parse, $document, $compile) {
         }
 
         // Attach collected blocks to the document.
-        // if (newBlocks.length) {
-        //   parentNode.insertBefore(
-        //     domFragmentFromBlocks(newBlocks),
-        //     element[0].nextSibling);
-        // }
         if (newBlocks.length) {
           element[0].parentNode.insertBefore(
             domFragmentFromBlocks(newBlocks),
             blocks[maxIndex] && blocks[maxIndex].element[0].nextSibling);
-        }
-
-        // notfiy parent their are no child elements
-        if (itemsLength === 0 && parentBranchCtrl) {
-          // parentBranchCtrl.disableArrow();
         }
 
         isUpdating = false;
@@ -273,6 +256,7 @@ function branchController($scope, $mdUtil, $animateCss) {
   // vm.killWatching; set in link function
   vm.setOpenState = setOpenState;
   vm.setSelected = setSelected;
+  vm.registerBranch = registerBranch;
 
   if (!$element) { return; }
   var arrow = $element[0].querySelector('.md-branch-icon');
@@ -285,19 +269,16 @@ function branchController($scope, $mdUtil, $animateCss) {
   $scope.$on('$destroy', function () {
     // tree controller may not exist if branch was never opened
     if (vm.treeCtrl) {
-      vm.treeCtrl.unregisterBranch(vm.treeCtrl.hashGetter(vm));
+      vm.treeCtrl.unregisterBranch(vm.treeCtrl.hashGetter($scope[$scope.repeatName]));
     }
   });
 
   // register branch if tree controller is accesable
-  if (vm.treeCtrl) {
-    registerBranch();
-  }
   function registerBranch() {
-    vm.treeCtrl.registerBranch(vm.treeCtrl.hashGetter(vm), {
+    vm.treeCtrl.registerBranch(vm.treeCtrl.hashGetter($scope[$scope.repeatName]), {
       setSelected: setSelected
     });
-    setSelected(vm.treeCtrl.selected[vm.treeCtrl.hashGetter(vm)] !== undefined);
+    setSelected(vm.treeCtrl.selected[vm.treeCtrl.hashGetter($scope[$scope.repeatName])] !== undefined);
   }
 
 
@@ -313,7 +294,7 @@ function branchController($scope, $mdUtil, $animateCss) {
     var isSelect = $element.attr('select') !== undefined;
     if (isSelect && branchContainsElement(e.target)) {
       var selected = $element.attr('selected') !== undefined;
-      vm.treeCtrl.toggleSelect(selected, vm.treeCtrl.hashGetter(vm), $scope[$scope.repeatName]);
+      vm.treeCtrl.toggleSelect(!selected, vm.treeCtrl.hashGetter($scope[$scope.repeatName]), $scope[$scope.repeatName]);
 
       $element.attr('selected', !selected);
       if (e.target.classList.contains('md-container')) { // clicked on checkbox
@@ -458,6 +439,6 @@ function branchController($scope, $mdUtil, $animateCss) {
 
   // set select state
   function setSelected(isSelected) {
-    $element.attr('selected', isSelected);
+    if ($element) { $element.attr('selected', isSelected); }
   }
 }
