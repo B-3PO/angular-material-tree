@@ -40,10 +40,10 @@ md-branch.md-THEME_NAME-theme {
     &[selected] > .md-branch-inner {
       .checkbox-icon {
         border-color: '{{foreground-2}}';
-        background-color: '{{primary-color}}';
+        background-color: '{{primary-color-0.87}}';
 
         &:after {
-          border-color: '{{primary-contrast}}';
+          border-color: '{{primary-contrast-0.87}}';
         }
       }
     }

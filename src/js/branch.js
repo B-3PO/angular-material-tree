@@ -18,12 +18,12 @@ var BRANCH_ARROW_TEMPLATE = angular.element('<div class="md-branch-icon-containe
 function branchDirective($parse, $document, $compile) {
   return {
     restrict: 'E',
-    multiElement: true,
+    // multiElement: true,
     require: ['mdBranch', '?^mdBranch', '?^mdTree', '?^mdBranchTemplates'],
     priority: 1000,
     terminal: true,
     transclude: 'element',
-    $$tlb: true,
+    // $$tlb: true,
     compile: compile,
     controller: 'BranchController'
   };
@@ -214,7 +214,8 @@ function branchDirective($parse, $document, $compile) {
           };
 
           updateScope(scope, index);
-          scope.$element = clone; // attach element to scope so it can be acced in controller
+          scope.$element = clone; // attach element to scope so it can be accessed in controller
+
           parentNode.appendChild(clone[0]);
         });
         return block;
@@ -242,12 +243,13 @@ function branchDirective($parse, $document, $compile) {
 
 // --- Controller ---
 
-
+var cid = 0;
 /*@ngInject*/
 function branchController($scope, $mdUtil, $animateCss) {
   /*jshint validthis: true*/
   var vm = this;
   var isOpen = false;
+  var _id = cid++;
 
   // injected $element is holds refernce to the comment. heres how to get arround this
   var $element = $scope.$element;
@@ -273,20 +275,12 @@ function branchController($scope, $mdUtil, $animateCss) {
     }
   });
 
-  // register branch if tree controller is accesable
-  function registerBranch() {
-    vm.treeCtrl.registerBranch(vm.treeCtrl.hashGetter($scope[$scope.repeatName]), {
-      setSelected: setSelected
-    });
-    setSelected(vm.treeCtrl.selected[vm.treeCtrl.hashGetter($scope[$scope.repeatName])] !== undefined);
-  }
-
-
 
   function handleClick(e) {
     // toggel branch
     if (e.target.classList.contains('md-branch-icon-container')) {
       toggleBranchClick(e);
+      e.stopPropagation();
       return;
     }
 
@@ -294,8 +288,7 @@ function branchController($scope, $mdUtil, $animateCss) {
     var isSelect = $element.attr('select') !== undefined;
     if (isSelect && branchContainsElement(e.target)) {
       var selected = $element.attr('selected') !== undefined;
-      findTree();
-      vm.treeCtrl.toggleSelect(!selected, vm.treeCtrl.hashGetter($scope[$scope.repeatName]), $scope[$scope.repeatName]);
+      getTreeCtrl().toggleSelect(!selected, getTreeCtrl().hashGetter($scope[$scope.repeatName]), $scope[$scope.repeatName]);
 
       $element.attr('selected', !selected);
       if (e.target.classList.contains('md-container')) { // clicked on checkbox
@@ -304,9 +297,10 @@ function branchController($scope, $mdUtil, $animateCss) {
         // if multiple is enabled add this to selection
         // otherwise single select
       }
-
+      e.stopPropagation();
     } else {
       toggleBranchClick(e);
+      e.stopPropagation();
     }
   }
 
@@ -339,7 +333,7 @@ function branchController($scope, $mdUtil, $animateCss) {
   function open(noAnimation) {
     if (isOpen) { return; }
     isOpen = true;
-    findTree();
+    // findTree();
     reconnectScope();
     vm.startWatching();
     $element.toggleClass('md-no-animation', noAnimation || false);
@@ -389,20 +383,28 @@ function branchController($scope, $mdUtil, $animateCss) {
 
   // nested, nested branches cannot access the tree controller due to their parents not being added to the dom.
   // To fix this we will walk the dom to find the tree and grab its controller
-  function findTree() {
-    if (vm.treeCtrl) { return; }
+  function getTreeCtrl() {
+    if (vm.treeCtrl) { return vm.treeCtrl; }
 
     var parent = $element[0].parentNode;
     while (parent && parent !== document.body) {
       if (parent.nodeName === 'MD-TREE') {
         vm.treeCtrl = angular.element(parent).controller('mdTree');
         registerBranch();
-        return;
+        return vm.treeCtrl;
       }
       parent = parent.parentNode;
     }
 
     console.error('`<md-branch>` element is not nested in a `<md-tree>` element. Selection will not work');
+  }
+
+  // register branch if tree controller is accesable
+  function registerBranch() {
+    vm.treeCtrl.registerBranch(vm.treeCtrl.hashGetter($scope[$scope.repeatName]), {
+      setSelected: setSelected
+    });
+    setSelected(vm.treeCtrl.selected[vm.treeCtrl.hashGetter($scope[$scope.repeatName])] !== undefined);
   }
 
 
