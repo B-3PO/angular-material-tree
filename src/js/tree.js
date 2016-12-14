@@ -20,7 +20,7 @@ function treeDirective($mdTheming, $mdUtil) {
       // make ngModel available to controller
       var ngModelCtrl = ctrls[1];
 
-      // create fake ngModel so code runs as normal
+      // create fake ngModel so code runs as normal when no model is provided
       if (!ngModelCtrl) {
         ngModelCtrl = $mdUtil.fakeNgModel();
         ngModelCtrl.$validators = []; //$mdUtil.fakeNgModel is missing `$validators`
@@ -124,7 +124,6 @@ function treeDirective($mdTheming, $mdUtil) {
     }
 
     function refreshViewValue() {
-      console.log('refreshViewValue', vm.selected)
       var branchValue;
       var newValue;
       var prevValue;

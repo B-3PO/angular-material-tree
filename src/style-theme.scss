@@ -1,37 +1,51 @@
-md-tree {
-  md-branch {
+md-branch.md-THEME_NAME-theme {
+  .md-branch-inner {
+    background-color: '{{background-hue-1}}';
+  }
+
+  .md-branch-icon svg {
+    fill: '{{foreground-2}}';
+  }
+
+  &.md-tip {
     .md-branch-inner {
-      background-color: '{{background-hue-1}}';
-    }
-
-    .md-branch-icon svg {
-      fill: '{{foreground-2}}';
-    }
-
-    &.md-tip {
-      .md-branch-inner {
-        background-color: '{{background-200}}';
-      }
-
-      .md-branch-icon svg {
-        fill: #fff;
-      }
-    }
-
-    &.md-open {
-      & > .md-branch-inner {
-        border-bottom-color: '{{foreground-4}}';
-      }
+      background-color: '{{background-200}}';
     }
   }
 
-  md-branch.md-2-line .md-branch-text,
-  md-branch.md-3-line .md-branch-text {
+  &.md-open {
+    & > .md-branch-inner {
+      border-bottom-color: '{{foreground-4}}';
+    }
+  }
+
+  &.md-2-line .md-branch-text,
+  &.md-3-line .md-branch-text {
     h3, h4 {
       color: '{{foreground-1}}';
     }
     p {
       color: '{{foreground-2}}';
+    }
+  }
+
+
+  &.md-checkbox-enabled {
+    .checkbox-icon {
+      border-color: '{{foreground-2}}';
+    }
+
+
+    // selected
+    &[selected] > .md-branch-inner {
+      .checkbox-icon {
+        border-color: '{{foreground-2}}';
+        background-color: '{{primary-color}}';
+
+        &:after {
+          border-color: '{{primary-contrast}}';
+        }
+      }
     }
   }
 }

@@ -4,7 +4,7 @@ angular
   .controller('BranchController', branchController);
 
 
-var CHECKBOX_SELECTION_INDICATOR = angular.element('<div class="checkbox-container"><div class="md-container"><div class="md-icon"></div></div></div>');
+var CHECKBOX_SELECTION_INDICATOR = angular.element('<div class="checkbox-container"><div class="checkbox-icon"></div></div>');
 var BRANCH_ARROW_TEMPLATE = angular.element('<div class="md-branch-icon-container">'+
   '<div class="md-branch-icon">'+
     '<svg fill="#000000" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">'+
@@ -294,6 +294,7 @@ function branchController($scope, $mdUtil, $animateCss) {
     var isSelect = $element.attr('select') !== undefined;
     if (isSelect && branchContainsElement(e.target)) {
       var selected = $element.attr('selected') !== undefined;
+      findTree();
       vm.treeCtrl.toggleSelect(!selected, vm.treeCtrl.hashGetter($scope[$scope.repeatName]), $scope[$scope.repeatName]);
 
       $element.attr('selected', !selected);
