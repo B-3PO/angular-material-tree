@@ -280,7 +280,6 @@ function branchController($scope, $mdUtil, $animateCss) {
     // toggel branch
     if (e.target.classList.contains('md-branch-icon-container')) {
       toggleBranchClick(e);
-      e.stopPropagation();
       return;
     }
 
@@ -288,19 +287,17 @@ function branchController($scope, $mdUtil, $animateCss) {
     var isSelect = $element.attr('select') !== undefined;
     if (isSelect && branchContainsElement(e.target)) {
       var selected = $element.attr('selected') !== undefined;
-      getTreeCtrl().toggleSelect(!selected, getTreeCtrl().hashGetter($scope[$scope.repeatName]), $scope[$scope.repeatName]);
-
       $element.attr('selected', !selected);
-      if (e.target.classList.contains('md-container')) { // clicked on checkbox
-        // deselect all and select this branch
-      } else {
-        // if multiple is enabled add this to selection
-        // otherwise single select
+
+      // deselect all if user did not click the checkbox
+      if (!e.target.classList.contains('checkbox-container')) { // clicked on checkbox
+        getTreeCtrl().deselectAll();
       }
+
+      getTreeCtrl().toggleSelect(!selected, getTreeCtrl().hashGetter($scope[$scope.repeatName]), $scope[$scope.repeatName]);
       e.stopPropagation();
     } else {
       toggleBranchClick(e);
-      e.stopPropagation();
     }
   }
 
@@ -316,6 +313,7 @@ function branchController($scope, $mdUtil, $animateCss) {
     if (!branchContainsElement(e.target)) { return; }
     if (isOpen !== true) { open(); }
     else { close(); }
+    e.stopPropagation();
   }
 
   function branchContainsElement(el) {

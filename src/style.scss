@@ -304,6 +304,7 @@ md-branch.md-checkbox-enabled > .md-branch-inner {
 
   // unchecked
   .checkbox-icon {
+    pointer-events: none;
     box-sizing: border-box;
     transition: 240ms;
     position: absolute;

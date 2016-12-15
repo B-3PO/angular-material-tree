@@ -39,6 +39,7 @@ function treeDirective($mdTheming, $mdUtil) {
     vm.registerBranch = registerBranch;
     vm.unregisterBranch = unregisterBranch;
     vm.toggleSelect = toggleSelect;
+    vm.deselectAll = deselectAll;
     vm.init = init;
     vm.hashGetter = hashGetter;
 
@@ -109,6 +110,9 @@ function treeDirective($mdTheming, $mdUtil) {
       refreshViewValue();
     }
 
+    function deselectAll() {
+      Object.keys(branches).forEach(deselect);
+    }
 
     function select(hashKey, hashedValue) {
       var branch = branches[hashKey];
