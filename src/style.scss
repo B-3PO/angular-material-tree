@@ -52,6 +52,7 @@ md-branch {
     min-height: $list-item-height;
     height: auto;
     border-bottom: 1px solid transparent;
+    transition: background-color 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
 
     cursor: pointer;
     &.md-tip {

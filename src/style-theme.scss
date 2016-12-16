@@ -1,15 +1,11 @@
 md-branch.md-THEME_NAME-theme {
-  .md-branch-inner {
-    background-color: '{{background-hue-1}}';
-  }
-
   .md-branch-icon svg {
     fill: '{{foreground-2}}';
   }
 
   &.md-tip {
     .md-branch-inner {
-      background-color: '{{background-200}}';
+      background-color: '{{background-hue-2}}';
     }
   }
 
@@ -46,6 +42,20 @@ md-branch.md-THEME_NAME-theme {
           border-color: '{{primary-contrast-0.87}}';
         }
       }
+    }
+  }
+
+
+  &:not([disabled]) .md-branch-inner {
+    background-color: '{{background-hue-1}}';
+    &:hover {
+      background-color: '{{background-500-0.2}}';
+    }
+    &.md-focused {
+      background-color: '{{background-500-0.2}}';
+    }
+    &.md-icon-button:hover {
+      background-color: transparent;
     }
   }
 }

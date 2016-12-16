@@ -317,8 +317,10 @@ function branchController($scope, $mdUtil, $animateCss) {
   }
 
   function branchContainsElement(el) {
-    var parent = el.parentNode;
     var innerContainer = $element[0].querySelector('.md-branch-inner');
+    if (el === innerContainer) { return true; } // check if el is container be preceding
+    var parent = el.parentNode;
+
     while (parent && parent !== document.body) {
       if (parent === innerContainer) { return true; }
       if (parent.nodeName === 'MD-BRANCH') { return false; }
