@@ -1,5 +1,5 @@
 <div layout="row">
-  <md-tree ng-model="vm.selectedItems" restrict-selection="depth,single" flex>
+  <md-tree ng-model="vm.selectedItems" restrict-selection="depth" flex>
     <md-branch branch-repeat="location in vm.locationData" class="md-2-line" select>
       <div class="md-branch-text">
         <h3>{{location.name}}</h3>

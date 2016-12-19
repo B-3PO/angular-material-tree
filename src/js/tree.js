@@ -108,6 +108,8 @@ function treeDirective($mdTheming, $mdUtil) {
       } else {
         deselect(hashKey);
       }
+      // TODO update model without calling select on branches
+      refreshViewValue();
     }
 
     function deselectAll() {
