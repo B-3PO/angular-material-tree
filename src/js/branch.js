@@ -414,7 +414,8 @@ function branchController($scope, $mdUtil, $animateCss) {
       if (parent.nodeName === 'MD-BRANCH') { depth += 1; }
       parent = parent.parentNode;
     }
-    return $scope.$depth = depth;
+    $scope.$depth = depth;
+    return depth;
   }
 
 

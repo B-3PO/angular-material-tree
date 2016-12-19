@@ -120,7 +120,7 @@ function treeDirective($mdTheming, $mdUtil) {
       var depth;
       var branch = branches[hashKey];
       if (branch !== undefined) {
-        handleSelectionConflicts(branch)
+        handleSelectionConflicts(branch);
         branch.setSelected(true);
         vm.selected[hashKey] = hashedValue;
       }
