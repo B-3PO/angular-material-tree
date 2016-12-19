@@ -243,13 +243,11 @@ function branchDirective($parse, $document, $compile) {
 
 // --- Controller ---
 
-var cid = 0;
 /*@ngInject*/
 function branchController($scope, $mdUtil, $animateCss) {
   /*jshint validthis: true*/
   var vm = this;
   var isOpen = false;
-  var _id = cid++;
 
   // injected $element is holds refernce to the comment. heres how to get arround this
   var $element = $scope.$element;
@@ -333,7 +331,6 @@ function branchController($scope, $mdUtil, $animateCss) {
   function open(noAnimation) {
     if (isOpen) { return; }
     isOpen = true;
-    // findTree();
     reconnectScope();
     vm.startWatching();
     $element.toggleClass('md-no-animation', noAnimation || false);
@@ -402,9 +399,22 @@ function branchController($scope, $mdUtil, $animateCss) {
   // register branch if tree controller is accesable
   function registerBranch() {
     vm.treeCtrl.registerBranch(vm.treeCtrl.hashGetter($scope[$scope.repeatName]), {
-      setSelected: setSelected
+      setSelected: setSelected,
+      getDepth: getDepth
     });
     setSelected(vm.treeCtrl.selected[vm.treeCtrl.hashGetter($scope[$scope.repeatName])] !== undefined);
+  }
+
+  function getDepth() {
+    if ($scope.$depth) { return $scope.$depth; }
+    var depth = 0;
+    var parent = $element[0].parentNode;
+    while (parent && parent !== document.body) {
+      if (parent.nodeName === 'MD-TREE') { break; }
+      if (parent.nodeName === 'MD-BRANCH') { depth += 1; }
+      parent = parent.parentNode;
+    }
+    return $scope.$depth = depth;
   }
 
 

@@ -30,9 +30,10 @@ function treeDirective($mdTheming, $mdUtil) {
   }
 
   /*@ngInject*/
-  function controller($scope) {
+  function controller($scope, $attrs) {
     /*jshint validthis:true*/
     var vm = this;
+    var selectionRestictions;
     var branches = {};
 
     vm.selected = {};
@@ -107,7 +108,6 @@ function treeDirective($mdTheming, $mdUtil) {
       } else {
         deselect(hashKey);
       }
-      refreshViewValue();
     }
 
     function deselectAll() {
@@ -115,9 +115,13 @@ function treeDirective($mdTheming, $mdUtil) {
     }
 
     function select(hashKey, hashedValue) {
+      var depth;
       var branch = branches[hashKey];
-      if (branch !== undefined) { branch.setSelected(true); }
-      vm.selected[hashKey] = hashedValue;
+      if (branch !== undefined) {
+        handleSelectionConflicts(branch)
+        branch.setSelected(true);
+        vm.selected[hashKey] = hashedValue;
+      }
     }
 
     function deselect(hashKey) {
@@ -125,6 +129,31 @@ function treeDirective($mdTheming, $mdUtil) {
       if (branch !== undefined) { branch.setSelected(false); }
       vm.selected[hashKey] = undefined;
       delete vm.selected[hashKey];
+    }
+
+    // handle selection restrictions set by `[restrict-selection]` attr
+    function handleSelectionConflicts(branch) {
+      var restictions = getSelectionRestrictions();
+      if (restictions.single) { deselectAll(); }
+      var depth = branch.getDepth();
+      var conflictingDepths = Object.keys(vm.selected).filter(function (hashKey) {
+        return branches[hashKey].getDepth() !== depth;
+      });
+      if (restictions.depth && conflictingDepths.length) {
+        conflictingDepths.forEach(deselect);
+      }
+    }
+
+    // gets selection restrictions from the `[restrict-selection]` attr and puts it into an object
+    function getSelectionRestrictions() {
+      if (!selectionRestictions) {
+        selectionRestictions = {};
+        var attrArr = $attrs.restrictSelection ? $attrs.restrictSelection.split(',').map(function (item) { return item.trim(); }) : [];
+        attrArr.forEach(function (key) {
+          selectionRestictions[key] = true;
+        });
+      }
+      return selectionRestictions;
     }
 
     function refreshViewValue() {
