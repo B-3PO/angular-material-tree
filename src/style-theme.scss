@@ -3,12 +3,6 @@ md-branch.md-THEME_NAME-theme {
     fill: '{{foreground-2}}';
   }
 
-  &.md-tip {
-    .md-branch-inner {
-      background-color: '{{background-hue-2}}';
-    }
-  }
-
   &.md-open {
     & > .md-branch-inner {
       border-bottom-color: '{{foreground-4}}';
@@ -56,6 +50,12 @@ md-branch.md-THEME_NAME-theme {
     }
     &.md-icon-button:hover {
       background-color: transparent;
+    }
+  }
+
+  &.md-tip {
+    .md-branch-inner {
+      background-color: '{{background-hue-2}}';
     }
   }
 }
