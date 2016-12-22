@@ -37,6 +37,7 @@ function treeDirective($mdTheming, $mdUtil) {
     var branches = {};
 
     vm.selected = {};
+    vm.opened = {};
     vm.registerBranch = registerBranch;
     vm.unregisterBranch = unregisterBranch;
     vm.toggleSelect = toggleSelect;
@@ -57,6 +58,9 @@ function treeDirective($mdTheming, $mdUtil) {
       ngModel.$isEmpty = function(value) {
         return !value || value.length === 0;
       };
+
+
+      element.on('click', handleClicks);
 
       function validateArray(modelValue, viewValue) {
         return angular.isArray(modelValue || viewValue || []);
@@ -87,59 +91,94 @@ function treeDirective($mdTheming, $mdUtil) {
       return value;
     }
 
-
-    function registerBranch(hashKey, ctrl) {
-      if (branches[hashKey] !== undefined) {
-        console.warn('This branch was already registered, ignoring.');
-        return;
-      }
-      branches[hashKey] = ctrl;
-    }
-
-    function unregisterBranch(hashKey) {
-      if (branches[branch] === undefined) { return; }
-      branches[branch] = undefined;
-      delete branches[branch];
-    }
-
-    function toggleSelect(selected, hashKey, value) {
-      if (selected) {
-        select(hashKey, value);
+    function toggleSelect(isSelected, hashKey, hashValue) {
+      if (isSelected) {
+        select(hashKey, hashValue);
       } else {
         deselect(hashKey);
       }
+
       // TODO update model without calling select on branches
       refreshViewValue();
+      // TODO render tree
     }
-
+    function select(hashKey, hashValue) {
+      // handleSelectionConflicts(hashKey);
+      vm.selected[hashKey] = hashedValue;
+      // TODO render tree
+    }
+    function deselect(hashKey) {
+      delete vm.selected[hashKey];
+      // TODO render tree
+    }
     function deselectAll() {
       Object.keys(branches).forEach(deselect);
     }
 
-    function select(hashKey, hashedValue) {
-      var depth;
-      var branch = branches[hashKey];
-      if (branch !== undefined) {
-        handleSelectionConflicts(branch);
-        branch.setSelected(true);
-        vm.selected[hashKey] = hashedValue;
+    function toggleOpen(hashKey, hashedValue) {
+      if (!vm.opened[hashKey]) {
+        vm.opened[hashKey] = hashedValue;
+      } else {
+        delete vm.opened[hashKey];
       }
+      // TODO render tree
+      // dosconnect/reconnect scope
     }
 
-    function deselect(hashKey) {
-      var branch = branches[hashKey];
-      if (branch !== undefined) { branch.setSelected(false); }
-      vm.selected[hashKey] = undefined;
-      delete vm.selected[hashKey];
-    }
+    // function registerBranch(hashKey, ctrl) {
+    //   if (branches[hashKey] !== undefined) {
+    //     console.warn('This branch was already registered, ignoring.');
+    //     return;
+    //   }
+    //   branches[hashKey] = ctrl;
+    // }
+
+    // function unregisterBranch(hashKey) {
+    //   if (branches[branch] === undefined) { return; }
+    //   branches[branch] = undefined;
+    //   delete branches[branch];
+    // }
+
+    // function toggleSelect(selected, hashKey, value) {
+    //   if (selected) {
+    //     select(hashKey, value);
+    //   } else {
+    //     deselect(hashKey);
+    //   }
+    //   // TODO update model without calling select on branches
+    //   refreshViewValue();
+    // }
+
+    // function deselectAll() {
+    //   Object.keys(branches).forEach(deselect);
+    // }
+
+    // function select(hashKey, hashedValue) {
+    //   var branch = branches[hashKey];
+    //   if (branch !== undefined) {
+    //     handleSelectionConflicts(branch);
+    //     // branch.setSelected(true);
+    //     vm.selected[hashKey] = hashedValue;
+    //   }
+    // }
+
+    // function deselect(hashKey) {
+    //   var branch = branches[hashKey];
+    //   // if (branch !== undefined) { branch.setSelected(false); }
+    //   vm.selected[hashKey] = undefined;
+    //   delete vm.selected[hashKey];
+    // }
+
 
     // handle selection restrictions set by `[restrict-selection]` attr
-    function handleSelectionConflicts(branch) {
+    // TODO how do i invoke this if there is no controller to call
+    // could add $$depth to data
+    function handleSelectionConflicts() {
       var restictions = getSelectionRestrictions();
       if (restictions.single) { deselectAll(); }
-      var depth = branch.getDepth();
-      var conflictingDepths = Object.keys(vm.selected).filter(function (hashKey) {
-        return branches[hashKey].getDepth() !== depth;
+      // var depth = getDepth(hashKey);
+      var conflictingDepths = Object.keys(vm.selected).filter(function (_hashKey) {
+        return branches[_hashKey].getDepth() !== depth;
       });
       if (restictions.depth && conflictingDepths.length) {
         conflictingDepths.forEach(deselect);
@@ -157,6 +196,7 @@ function treeDirective($mdTheming, $mdUtil) {
       }
       return selectionRestictions;
     }
+
 
     function refreshViewValue() {
       var branchValue;
@@ -181,6 +221,84 @@ function treeDirective($mdTheming, $mdUtil) {
         vm.ngModel.$setViewValue(newValue);
         vm.ngModel.$render();
       }
+    }
+
+
+
+    // -- Clicks --
+
+    function handleClicks(e) {
+      var closest = getClosest(e.target); // closest clickable element (arrow, checkbox, branch)
+      var branch = getBranch(closest);
+      if (!branch) { return; };
+      var branchScope = angular.element(branch).scope();
+      var item = branchScope[branchScope.repeatName];
+
+      // toggle branch
+      if (isArrow(closest)) {
+        toggleBranchClick(e, item);
+        return;
+      }
+
+      if (isSelectOn(branch)) {
+        var selected = isSelected(branch);
+        var item = branchScope[branchScope.repeatName];
+
+        if (isCheckbox(closest)) {
+          if (Object.keys(selected).length > 1) { selected = false; }
+          deselectAll();
+        }
+
+        branch.setAttribute('selected', selected);
+        branchItem.$$selected = !branchItem.$$selected;
+        toggleSelect(selected, hashGetter(item), item);
+        e.stopPropagation();
+      } else {
+        toggleBranchClick(e, item);
+      }
+    }
+
+    // set open state
+    function toggleBranchClick(e, branchItem) {
+      toggleOpen(hashGetter(branchItem), branchItem);
+      e.stopPropagation();
+    }
+
+    function getClosest(el) {
+      if (valid(el)) { return el; }
+      var parent = el.parentNode;
+      while (parent && parent !== document.body) {
+        if (valid(parent)) { return parent; }
+        parent = parent.parentNode;
+      }
+      return null;
+
+      function valid(el) {
+        return el.nodeName === 'MD-BRANCH' || el.classList.contains('md-branch-icon-container') || el.classList.contains('checkbox-container');
+      }
+    }
+
+    function getBranch(el) {
+      if (!el) { return null; }
+      if (el.nodeName === 'MD-BRANCH') { return el; }
+      var parent = el.parentNode;
+      while (parent && parent !== document.body) {
+        if (parent.nodeName === 'MD-BRANCH') { return parent; }
+        parent = parent.parentNode;
+      }
+      return null;
+    }
+
+    function isArrow(el) {
+      return el.classList.contains('md-branch-icon-container');
+    }
+
+    function isSelectOn(el) {
+      return el.hasAttribute('select');
+    }
+
+    function isSelected() {
+      return el.hasAttribute('selected');
     }
   }
 }
