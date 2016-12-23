@@ -30,7 +30,7 @@ function treeDirective($mdTheming, $mdUtil) {
   }
 
   /*@ngInject*/
-  function controller($scope, $attrs) {
+  function controller($scope, $attrs, $element, $mdUtil, $animateCss) {
     /*jshint validthis:true*/
     var vm = this;
     var selectionRestictions;
@@ -38,12 +38,10 @@ function treeDirective($mdTheming, $mdUtil) {
 
     vm.selected = {};
     vm.opened = {};
-    vm.registerBranch = registerBranch;
-    vm.unregisterBranch = unregisterBranch;
-    vm.toggleSelect = toggleSelect;
-    vm.deselectAll = deselectAll;
+    // vm.toggleSelect = toggleSelect;
+    // vm.deselectAll = deselectAll;
     vm.init = init;
-    vm.hashGetter = hashGetter;
+    // vm.hashGetter = hashGetter;
 
     // setup ngModel and make it available to controller
     function init(ngModel, binding) {
@@ -60,7 +58,7 @@ function treeDirective($mdTheming, $mdUtil) {
       };
 
 
-      element.on('click', handleClicks);
+      $element.on('click', handleClicks);
 
       function validateArray(modelValue, viewValue) {
         return angular.isArray(modelValue || viewValue || []);
@@ -92,83 +90,93 @@ function treeDirective($mdTheming, $mdUtil) {
     }
 
     function toggleSelect(isSelected, hashKey, hashValue) {
-      if (isSelected) {
+      if (!isSelected) {
         select(hashKey, hashValue);
       } else {
         deselect(hashKey);
       }
-
-      // TODO update model without calling select on branches
       refreshViewValue();
-      // TODO render tree
     }
     function select(hashKey, hashValue) {
-      // handleSelectionConflicts(hashKey);
-      vm.selected[hashKey] = hashedValue;
-      // TODO render tree
+      // TODO  handleSelectionConflicts(hashKey);
+      vm.selected[hashKey] = hashValue;
     }
     function deselect(hashKey) {
       delete vm.selected[hashKey];
-      // TODO render tree
     }
     function deselectAll() {
-      Object.keys(branches).forEach(deselect);
+      Object.keys(vm.selected).forEach(deselect);
+      Array.prototype.slice.call($element[0].querySelectorAll('md-branch[selected]')).forEach(function (el) {
+        el.removeAttribute('selected');
+      });
     }
 
-    function toggleOpen(hashKey, hashedValue) {
-      if (!vm.opened[hashKey]) {
-        vm.opened[hashKey] = hashedValue;
+    function toggleOpen(hashKey, hashValue, branchElement) {
+      var isOpen = !vm.opened[hashKey];
+      if (isOpen) {
+        vm.opened[hashKey] = hashValue;
+        hashValue.$$isOpen = true;
+        open(branchElement);
       } else {
         delete vm.opened[hashKey];
+        hashValue.$$isOpen = false;
+        close(branchElement);
       }
-      // TODO render tree
-      // dosconnect/reconnect scope
     }
 
-    // function registerBranch(hashKey, ctrl) {
-    //   if (branches[hashKey] !== undefined) {
-    //     console.warn('This branch was already registered, ignoring.');
-    //     return;
-    //   }
-    //   branches[hashKey] = ctrl;
-    // }
+    function open(branchElement) {
+      if (!branchElement) { return; }
 
-    // function unregisterBranch(hashKey) {
-    //   if (branches[branch] === undefined) { return; }
-    //   branches[branch] = undefined;
-    //   delete branches[branch];
-    // }
+      var element = angular.element(branchElement);
+      var scope = element.scope();
+      $mdUtil.reconnectScope(scope);
+      scope.isOpen = true;
+      scope.startWatching();
 
-    // function toggleSelect(selected, hashKey, value) {
-    //   if (selected) {
-    //     select(hashKey, value);
-    //   } else {
-    //     deselect(hashKey);
-    //   }
-    //   // TODO update model without calling select on branches
-    //   refreshViewValue();
-    // }
+      $mdUtil.nextTick(function () {
+        var container = angular.element(element[0].querySelector('.md-branch-container'));
+        element.addClass('md-open');
+        container.addClass('md-overflow md-show');
 
-    // function deselectAll() {
-    //   Object.keys(branches).forEach(deselect);
-    // }
+        $animateCss(container, {
+          from: {'max-height': '0px', opacity: 0},
+          to: {'max-height': getHeight(element), opacity: 1}
+        })
+        .start()
+        .then(function () {
+          container.css('max-height', 'none');
+          container.removeClass('md-overflow md-show');
+        });
+      });
+    }
 
-    // function select(hashKey, hashedValue) {
-    //   var branch = branches[hashKey];
-    //   if (branch !== undefined) {
-    //     handleSelectionConflicts(branch);
-    //     // branch.setSelected(true);
-    //     vm.selected[hashKey] = hashedValue;
-    //   }
-    // }
+    function close(branchElement) {
+      if (!branchElement) { return; }
 
-    // function deselect(hashKey) {
-    //   var branch = branches[hashKey];
-    //   // if (branch !== undefined) { branch.setSelected(false); }
-    //   vm.selected[hashKey] = undefined;
-    //   delete vm.selected[hashKey];
-    // }
+      var element = angular.element(branchElement);
+      var scope = element.scope();
+      scope.isOpen = false;
+      scope.killWatching();
 
+      $mdUtil.nextTick(function () {
+        var container = angular.element(element[0].querySelector('.md-branch-container'));
+        element.removeClass('md-open');
+        container.addClass('md-overflow md-hide');
+        $animateCss(container, {
+          from: {'max-height': getHeight(element), opacity: 1},
+          to: {'max-height': '0px', opacity: 0}
+        })
+        .start()
+        .then(function () {
+          container.removeClass('md-overflow md-hide');
+          $mdUtil.disconnectScope(scope);
+        });
+      });
+    }
+
+    function getHeight(element) {
+      return element[0].scrollHeight + 'px';
+    }
 
     // handle selection restrictions set by `[restrict-selection]` attr
     // TODO how do i invoke this if there is no controller to call
@@ -236,31 +244,35 @@ function treeDirective($mdTheming, $mdUtil) {
 
       // toggle branch
       if (isArrow(closest)) {
-        toggleBranchClick(e, item);
+        toggleBranchClick(e, item, branch);
         return;
       }
 
       if (isSelectOn(branch)) {
-        var selected = isSelected(branch);
+        var _isSelected = isSelected(branch);
         var item = branchScope[branchScope.repeatName];
 
-        if (isCheckbox(closest)) {
-          if (Object.keys(selected).length > 1) { selected = false; }
+        if (!isCheckbox(closest)) {
+          if (Object.keys(vm.selected).length > 1) { _isSelected = false; }
           deselectAll();
         }
 
-        branch.setAttribute('selected', selected);
-        branchItem.$$selected = !branchItem.$$selected;
-        toggleSelect(selected, hashGetter(item), item);
+        if (_isSelected) {
+          branch.removeAttribute('selected');
+        } else {
+          branch.setAttribute('selected', 'selected');
+        }
+        item.$$selected = !item.$$selected;
+        toggleSelect(_isSelected, hashGetter(item), item);
         e.stopPropagation();
       } else {
-        toggleBranchClick(e, item);
+        toggleBranchClick(e, item, branch);
       }
     }
 
     // set open state
-    function toggleBranchClick(e, branchItem) {
-      toggleOpen(hashGetter(branchItem), branchItem);
+    function toggleBranchClick(e, branchItem, branchElement) {
+      toggleOpen(hashGetter(branchItem), branchItem, branchElement);
       e.stopPropagation();
     }
 
@@ -297,8 +309,12 @@ function treeDirective($mdTheming, $mdUtil) {
       return el.hasAttribute('select');
     }
 
-    function isSelected() {
+    function isSelected(el) {
       return el.hasAttribute('selected');
+    }
+
+    function isCheckbox(el) {
+      return el.classList.contains('checkbox-container');
     }
   }
 }

@@ -15,15 +15,15 @@ var BRANCH_ARROW_TEMPLATE = angular.element('<div class="md-branch-icon-containe
 '</div>');
 
 /*@ngInject*/
-function branchDirective($parse, $document, $compile) {
+function branchDirective($parse, $document, $mdUtil) {
   return {
     restrict: 'E',
-    require: ['mdBranch', '?^mdBranch', '?^mdTree', '?^mdBranchTemplates'],
+    require: ['?^mdBranchTemplates'],
     priority: 1000,
     terminal: true,
     transclude: 'element',
     compile: compile,
-    controller: 'BranchController'
+    // controller: 'BranchController'
   };
 
 
@@ -44,8 +44,6 @@ function branchDirective($parse, $document, $compile) {
       var pooledBlocks = [];
       var itemsLength = 0;
       var isUpdating = false;
-      var ctrl = ctrls[0];
-      var parentBranchCtrl = ctrls[1];
       if (isOpen) { startWatching(); }
 
 
@@ -58,15 +56,15 @@ function branchDirective($parse, $document, $compile) {
           dataWatcher();
         }
       }
-      ctrl.startWatching = startWatching;
-      ctrl.killWatching = killWatching;
-      ctrl.setOpenState(isOpen);
-
-      // add tree controller and register if available
-      if (ctrls[2]) {
-        ctrl.treeCtrl = ctrls[2];
-        ctrl.registerBranch();
-      }
+      scope.startWatching = startWatching;
+      scope.killWatching = killWatching;
+      // ctrl.setOpenState(isOpen);
+      //
+      // // add tree controller and register if available
+      // if (ctrls[2]) {
+      //   ctrl.treeCtrl = ctrls[2];
+      //   ctrl.registerBranch();
+      // }
 
 
       function updateBranch(newItems, oldItems) {
@@ -146,8 +144,7 @@ function branchDirective($parse, $document, $compile) {
         block.new = false;
         // Update and digest the block's scope.
         updateScope(block.scope, index);
-        updateState(block.scope,  index, block.pooled);
-        block.pooled = undefined;
+        updateState(block.scope,  index);
 
         // Perform digest before re-attaching the block.
         // Any resulting synchronous dom mutations should be much faster as a result.
@@ -199,25 +196,25 @@ function branchDirective($parse, $document, $compile) {
         $scope.$odd = !($scope.$even = (index & 1) === 0);
       }
 
-      function updateState($scope, index, pooled) {
+      function updateState($scope, index) {
         var item = items ? items[index] : undefined;
         var element = $scope.$element && $scope.$element[0] ? $scope.$element : undefined;
 
         element.toggleClass('md-open', item.$$isOpen);
         if (item.$$isOpen) {
-          reconnectScope($scope);
+          $mdUtil.reconnectScope($scope);
         } else {
           // disconnectScope($scope);
         }
 
         if (item.$$isOpen !== undefined && item.$$isOpen !== $scope.isOpen) {
           // $scope.isOpen = item.$$isOpen;
-          console.log($scope.$element[0])
-          console.log('a', item.$$isOpen);
+          // console.log($scope.$element[0])
+          // console.log('a', item.$$isOpen);
           setTimeout(function () {
-            console.log($scope.$element[0])
-            console.log('b', item.$$isOpen, item, $scope[$scope.repeatName])
-            $scope.$element.controller('md').setOpenState(item.$$isOpen, true);
+            // console.log($scope.$element[0])
+            // console.log('b', item.$$isOpen, item, $scope[$scope.repeatName])
+            // $scope.$element.controller('md').setOpenState(item.$$isOpen, true);
           }, 100);
         }
 
@@ -376,7 +373,7 @@ function branchController($scope, $mdUtil, $animateCss) {
 
   function open(noAnimation, force) {
     if (force !== true && $scope.isOpen) { return; }
-    reconnectScope($scope);
+    $mdUtil.reconnectScope($scope);
     $scope.isOpen = true;
     setItemOpenState();
     vm.startWatching();
@@ -417,7 +414,7 @@ function branchController($scope, $mdUtil, $animateCss) {
       .start()
       .then(function () {
         container.removeClass('md-overflow md-hide');
-        disconnectScope($scope);
+        $mdUtil.disconnectScope($scope);
       });
     });
   }
@@ -474,39 +471,5 @@ function branchController($scope, $mdUtil, $animateCss) {
   // set select state
   function setSelected(isSelected) {
     if ($element) { $element.attr('selected', isSelected); }
-  }
-}
-
-
-
-// remove scope from parents reference so it is not used in digest
-function disconnectScope($scope) {
-  if ($scope.$$destroyed) return;
-
-  var parent = $scope.$parent;
-  $scope.$$disconnected = true;
-
-  // See Scope.$destroy
-  if (parent.$$childHead === $scope) parent.$$childHead = $scope.$$nextSibling;
-  if (parent.$$childTail === $scope) parent.$$childTail = $scope.$$prevSibling;
-  if ($scope.$$prevSibling) { $scope.$$prevSibling.$$nextSibling = $scope.$$nextSibling; }
-  if ($scope.$$nextSibling) { $scope.$$nextSibling.$$prevSibling = $scope.$$prevSibling; }
-  $scope.$$nextSibling = $scope.$$prevSibling = null;
-}
-
-// recoonect disconnected scope so it is used in the digest
-function reconnectScope($scope) {
-  if (!$scope.$$disconnected) return;
-
-  var child = $scope;
-  var parent = child.$parent;
-  child.$$disconnected = false;
-  // See Scope.$new for this logic...
-  child.$$prevSibling = parent.$$childTail;
-  if (parent.$$childHead) {
-    parent.$$childTail.$$nextSibling = child;
-    parent.$$childTail = child;
-  } else {
-    parent.$$childHead = parent.$$childTail = child;
   }
 }
