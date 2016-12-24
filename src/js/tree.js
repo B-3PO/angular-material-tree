@@ -4,7 +4,7 @@ angular
 
 
 var branchNextId = 0;
-function treeDirective($mdTheming, $mdUtil, $parse) {
+function treeDirective($mdTheming, $mdUtil) {
   return {
     restrict: 'E',
     require: ['mdTree', '?ngModel'],
@@ -30,14 +30,10 @@ function treeDirective($mdTheming, $mdUtil, $parse) {
   }
 
   /*@ngInject*/
-  function controller($scope, $attrs, $element, $mdUtil, $animateCss) {
+  function controller($scope, $attrs, $element, $mdUtil, $$mdTree) {
     /*jshint validthis:true*/
     var vm = this;
     var selectionRestictions;
-    var openOnFilter = $attrs.openOnFilter ? $parse($attrs.openOnFilter) : undefined;
-    $scope.$watch(function () { return openOnFilter($scope); }, function (value) {
-      // TODO handle is filter
-    });
 
     vm.selected = {};
     vm.opened = {};
@@ -115,67 +111,14 @@ function treeDirective($mdTheming, $mdUtil, $parse) {
       if (isOpen) {
         vm.opened[hashKey] = hashValue;
         hashValue.$$isOpen = true;
-        open(branchElement);
+        $$mdTree.open(branchElement);
       } else {
         delete vm.opened[hashKey];
         hashValue.$$isOpen = false;
-        close(branchElement);
+        $$mdTree.close(branchElement);
       }
     }
 
-    function open(branchElement) {
-      if (!branchElement) { return; }
-
-      var element = angular.element(branchElement);
-      var scope = element.scope();
-      $mdUtil.reconnectScope(scope);
-      scope.isOpen = true;
-      scope.startWatching();
-
-      $mdUtil.nextTick(function () {
-        var container = angular.element(element[0].querySelector('.md-branch-container'));
-        element.addClass('md-open');
-        container.addClass('md-overflow md-show');
-
-        $animateCss(container, {
-          from: {'max-height': '0px', opacity: 0},
-          to: {'max-height': getHeight(element), opacity: 1}
-        })
-        .start()
-        .then(function () {
-          container.css('max-height', 'none');
-          container.removeClass('md-overflow md-show');
-        });
-      });
-    }
-
-    function close(branchElement) {
-      if (!branchElement) { return; }
-
-      var element = angular.element(branchElement);
-      var scope = element.scope();
-      scope.isOpen = false;
-      scope.killWatching();
-
-      $mdUtil.nextTick(function () {
-        var container = angular.element(element[0].querySelector('.md-branch-container'));
-        element.removeClass('md-open');
-        container.addClass('md-overflow md-hide');
-        $animateCss(container, {
-          from: {'max-height': getHeight(element), opacity: 1},
-          to: {'max-height': '0px', opacity: 0}
-        })
-        .start()
-        .then(function () {
-          container.removeClass('md-overflow md-hide');
-          $mdUtil.disconnectScope(scope);
-        });
-      });
-    }
-
-    function getHeight(element) {
-      return element[0].scrollHeight + 'px';
-    }
 
     // handle selection restrictions set by `[restrict-selection]` attr
     // TODO how do i invoke this if there is no controller to call

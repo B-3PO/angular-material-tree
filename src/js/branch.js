@@ -14,7 +14,7 @@ var BRANCH_ARROW_TEMPLATE = angular.element('<div class="md-branch-icon-containe
 '</div>');
 
 /*@ngInject*/
-function branchDirective($parse, $document, $mdUtil) {
+function branchDirective($parse, $document, $mdUtil, $filter, $$mdTree) {
   return {
     restrict: 'E',
     require: ['?^mdBranchTemplates'],
@@ -42,16 +42,33 @@ function branchDirective($parse, $document, $mdUtil) {
       var pooledBlocks = [];
       var itemsLength = 0;
       var isUpdating = false;
+      var isFilterOpen = false;
       if (isOpen) { startWatching(); }
+
+      scope.$mdBranchFilter = function (value) {
+        if (value && value.length > 2) {
+          isFilterOpen = true;
+          blocks.forEach(function (block) {
+            $$mdTree.filterOpen(block);
+          });
+        } else if ((!value || value.length < 3) && isFilterOpen) {
+          isFilterOpen = false;
+          blocks.forEach(function (block) {
+            $$mdTree.filterClose(block);
+          });
+        }
+        return $filter('filter')(value);
+      }
 
 
       function startWatching() {
-        killWatching();
+        if (dataWatcher) { return; }
         dataWatcher = scope.$watchCollection(repeatListExpression, updateBranch);
       }
       function killWatching() {
         if (typeof dataWatcher === 'function') {
           dataWatcher();
+          dataWatcher = undefined;
         }
       }
       scope.startWatching = startWatching;
@@ -192,12 +209,26 @@ function branchDirective($parse, $document, $mdUtil) {
       function updateState($scope, index) {
         var item = items ? items[index] : undefined;
         var element = $scope.$element && $scope.$element[0] ? $scope.$element : undefined;
+        $mdUtil.nextTick(function () {
+          element.toggleClass('md-open', item.$$isOpen);
+          if (item.$$isOpen) {
+            $mdUtil.reconnectScope($scope);
+            $scope.startWatching();
+          }
+        });
+      }
 
-        element.toggleClass('md-open', item.$$isOpen);
-        if (item.$$isOpen) {
-          $mdUtil.reconnectScope($scope);
-          $scope.startWatching();
+      function getTreeCtrl(scope) {
+        if (scope.treeCtrl) { return scope.treeCtrl; }
+        var parent = scope.$element[0].parentNode;
+        while (parent && parent !== document.body) {
+          if (parent.nodeName === 'MD-TREE') {
+            scope.treeCtrl = angular.element(parent).controller('mdTree');
+            return scope.treeCtrl;
+          }
+          parent = parent.parentNode;
         }
+        console.error('`<md-branch>` element is not nested in a `<md-tree>` element. Selection will not work');
       }
 
       function initState(item) {
