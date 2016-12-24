@@ -1,7 +1,6 @@
 angular
   .module('angular-material-tree')
-  .directive('mdBranch', branchDirective)
-  .controller('BranchController', branchController);
+  .directive('mdBranch', branchDirective);
 
 
 var CHECKBOX_SELECTION_INDICATOR = angular.element('<div class="checkbox-container"><div class="checkbox-icon"></div></div>');
@@ -22,8 +21,7 @@ function branchDirective($parse, $document, $mdUtil) {
     priority: 1000,
     terminal: true,
     transclude: 'element',
-    compile: compile,
-    // controller: 'BranchController'
+    compile: compile
   };
 
 
@@ -58,13 +56,6 @@ function branchDirective($parse, $document, $mdUtil) {
       }
       scope.startWatching = startWatching;
       scope.killWatching = killWatching;
-      // ctrl.setOpenState(isOpen);
-      //
-      // // add tree controller and register if available
-      // if (ctrls[2]) {
-      //   ctrl.treeCtrl = ctrls[2];
-      //   ctrl.registerBranch();
-      // }
 
 
       function updateBranch(newItems, oldItems) {
@@ -194,6 +185,8 @@ function branchDirective($parse, $document, $mdUtil) {
         $scope.repeatName = repeatName;
         $scope[repeatName] = items && items[index];
         $scope.$odd = !($scope.$even = (index & 1) === 0);
+        $scope.$depth = ($scope.$parent.$depth + 1) || 0;
+        items[index].$$depth = $scope.$depth;
       }
 
       function updateState($scope, index) {
@@ -203,28 +196,8 @@ function branchDirective($parse, $document, $mdUtil) {
         element.toggleClass('md-open', item.$$isOpen);
         if (item.$$isOpen) {
           $mdUtil.reconnectScope($scope);
-        } else {
-          // disconnectScope($scope);
+          $scope.startWatching();
         }
-
-        if (item.$$isOpen !== undefined && item.$$isOpen !== $scope.isOpen) {
-          // $scope.isOpen = item.$$isOpen;
-          // console.log($scope.$element[0])
-          // console.log('a', item.$$isOpen);
-          setTimeout(function () {
-            // console.log($scope.$element[0])
-            // console.log('b', item.$$isOpen, item, $scope[$scope.repeatName])
-            // $scope.$element.controller('md').setOpenState(item.$$isOpen, true);
-          }, 100);
-        }
-
-        // console.log('-- begin');
-        // console.log(element[0])
-        // console.log('pooled', pooled, item.$$isOpen !== undefined, item.$$isOpen !== $scope.isOpen);
-        // console.log($scope);
-        // console.log(item);
-        // console.log('--');
-        // console.log();
       }
 
       function initState(item) {
@@ -271,205 +244,4 @@ function branchDirective($parse, $document, $mdUtil) {
     };
   }
 
-}
-
-
-
-
-
-
-
-
-// --- Controller ---
-
-/*@ngInject*/
-function branchController($scope, $mdUtil, $animateCss) {
-  /*jshint validthis: true*/
-  var vm = this;
-  $scope.isOpen = false;
-
-  // injected $element is holds refernce to the comment. heres how to get arround this
-  var $element = $scope.$element;
-
-  // vm.startWatching; set in link function
-  // vm.killWatching; set in link function
-  vm.setOpenState = setOpenState;
-  vm.setSelected = setSelected;
-  vm.registerBranch = registerBranch;
-
-  if (!$element) { return; }
-  var arrow = $element[0].querySelector('.md-branch-icon');
-  var ngClick = $element.attr('ng-click');
-
-  if (!ngClick) {
-    $element.on('click', handleClick);
-  }
-
-  $scope.$on('$destroy', function () {
-    // tree controller may not exist if branch was never opened
-    if (vm.treeCtrl) {
-      vm.treeCtrl.unregisterBranch(vm.treeCtrl.hashGetter($scope[$scope.repeatName]));
-    }
-  });
-
-
-  function handleClick(e) {
-    // toggel branch
-    if (e.target.classList.contains('md-branch-icon-container')) {
-      toggleBranchClick(e);
-      return;
-    }
-
-    // handle select
-    var isSelect = $element.attr('select') !== undefined;
-    if (isSelect && branchContainsElement(e.target)) {
-      var selected = $element.attr('selected') !== undefined;
-
-      // deselect all if user did not click the checkbox
-      // var hadMultiple = false;
-      if (!e.target.classList.contains('checkbox-container')) { // clicked on checkbox
-        if (Object.keys(getTreeCtrl().selected).length > 1) {
-          selected = false;
-        }
-        getTreeCtrl().deselectAll();
-      }
-
-      $element.attr('selected', !selected);
-      getTreeCtrl().toggleSelect(!selected, getTreeCtrl().hashGetter($scope[$scope.repeatName]), $scope[$scope.repeatName]);
-      e.stopPropagation();
-    } else {
-      toggleBranchClick(e);
-    }
-  }
-
-  function setOpenState(value, force) {
-    // if (isOpen == false) { disconnectScope($scope); }
-    if (force !== true && value === $scope.isOpen) { return; }
-    $scope.isOpen = value;
-    if ($scope.isOpen === true) { open(true, force); }
-    else { close(true, force); }
-  }
-
-  function toggleBranchClick(e) {
-    if (!branchContainsElement(e.target)) { return; }
-    if ($scope.isOpen !== true) { open(); }
-    else { close(); }
-    e.stopPropagation();
-  }
-
-  function branchContainsElement(el) {
-    var innerContainer = $element[0].querySelector('.md-branch-inner');
-    if (el === innerContainer) { return true; } // check if el is container be preceding
-    var parent = el.parentNode;
-
-    while (parent && parent !== document.body) {
-      if (parent === innerContainer) { return true; }
-      if (parent.nodeName === 'MD-BRANCH') { return false; }
-      parent = parent.parentNode;
-    }
-    return false;
-  }
-
-
-  function open(noAnimation, force) {
-    if (force !== true && $scope.isOpen) { return; }
-    $mdUtil.reconnectScope($scope);
-    $scope.isOpen = true;
-    setItemOpenState();
-    vm.startWatching();
-    $element.toggleClass('md-no-animation', noAnimation || false);
-
-    $mdUtil.nextTick(function () {
-      var container = angular.element($element[0].querySelector('.md-branch-container'));
-      $element.addClass('md-open');
-      container.addClass('md-overflow md-show');
-
-      $animateCss(container, {
-        from: {'max-height': '0px', opacity: 0},
-        to: {'max-height': getHeight(), opacity: 1}
-      })
-      .start()
-      .then(function () {
-        container.css('max-height', 'none');
-        container.removeClass('md-overflow md-show');
-      });
-    });
-  }
-
-  function close(noAnimation, force) {
-    if (force !== true && !$scope.isOpen) { return; }
-    $scope.isOpen = false;
-    setItemOpenState();
-    vm.killWatching();
-    $element.toggleClass('md-no-animation', noAnimation || false);
-
-    $mdUtil.nextTick(function () {
-      var container = angular.element($element[0].querySelector('.md-branch-container'));
-      $element.removeClass('md-open');
-      container.addClass('md-overflow md-hide');
-      $animateCss(container, {
-        from: {'max-height': getHeight(), opacity: 1},
-        to: {'max-height': '0px', opacity: 0}
-      })
-      .start()
-      .then(function () {
-        container.removeClass('md-overflow md-hide');
-        $mdUtil.disconnectScope($scope);
-      });
-    });
-  }
-
-  function setItemOpenState() {
-    var item = $scope[$scope.repeatName];
-    item.$$isOpen = $scope.isOpen;
-  }
-
-  function getHeight() {
-    return $element[0].scrollHeight + 'px';
-  }
-
-  // nested, nested branches cannot access the tree controller due to their parents not being added to the dom.
-  // To fix this we will walk the dom to find the tree and grab its controller
-  function getTreeCtrl() {
-    if (vm.treeCtrl) { return vm.treeCtrl; }
-
-    var parent = $element[0].parentNode;
-    while (parent && parent !== document.body) {
-      if (parent.nodeName === 'MD-TREE') {
-        vm.treeCtrl = angular.element(parent).controller('mdTree');
-        registerBranch();
-        return vm.treeCtrl;
-      }
-      parent = parent.parentNode;
-    }
-
-    console.error('`<md-branch>` element is not nested in a `<md-tree>` element. Selection will not work');
-  }
-
-  // register branch if tree controller is accesable
-  function registerBranch() {
-    vm.treeCtrl.registerBranch(vm.treeCtrl.hashGetter($scope[$scope.repeatName]), {
-      setSelected: setSelected,
-      getDepth: getDepth
-    });
-    setSelected(vm.treeCtrl.selected[vm.treeCtrl.hashGetter($scope[$scope.repeatName])] !== undefined);
-  }
-
-  function getDepth() {
-    if ($scope.$depth) { return $scope.$depth; }
-    var depth = 0;
-    var parent = $element[0].parentNode;
-    while (parent && parent !== document.body) {
-      if (parent.nodeName === 'MD-TREE') { break; }
-      if (parent.nodeName === 'MD-BRANCH') { depth += 1; }
-      parent = parent.parentNode;
-    }
-    $scope.$depth = depth;
-    return depth;
-  }
-
-  // set select state
-  function setSelected(isSelected) {
-    if ($element) { $element.attr('selected', isSelected); }
-  }
 }

@@ -4,7 +4,7 @@ angular
 
 
 var branchNextId = 0;
-function treeDirective($mdTheming, $mdUtil) {
+function treeDirective($mdTheming, $mdUtil, $parse) {
   return {
     restrict: 'E',
     require: ['mdTree', '?ngModel'],
@@ -34,14 +34,14 @@ function treeDirective($mdTheming, $mdUtil) {
     /*jshint validthis:true*/
     var vm = this;
     var selectionRestictions;
-    var branches = {};
+    var openOnFilter = $attrs.openOnFilter ? $parse($attrs.openOnFilter) : undefined;
+    $scope.$watch(function () { return openOnFilter($scope); }, function (value) {
+      // TODO handle is filter
+    });
 
     vm.selected = {};
     vm.opened = {};
-    // vm.toggleSelect = toggleSelect;
-    // vm.deselectAll = deselectAll;
     vm.init = init;
-    // vm.hashGetter = hashGetter;
 
     // setup ngModel and make it available to controller
     function init(ngModel, binding) {
@@ -56,7 +56,6 @@ function treeDirective($mdTheming, $mdUtil) {
       ngModel.$isEmpty = function(value) {
         return !value || value.length === 0;
       };
-
 
       $element.on('click', handleClicks);
 
@@ -89,19 +88,19 @@ function treeDirective($mdTheming, $mdUtil) {
       return value;
     }
 
-    function toggleSelect(isSelected, hashKey, hashValue) {
+    function toggleSelect(isSelected, hashKey, hashValue, element) {
       if (!isSelected) {
-        select(hashKey, hashValue);
+        select(hashKey, hashValue, element);
       } else {
-        deselect(hashKey);
+        deselect(hashKey, element);
       }
       refreshViewValue();
     }
-    function select(hashKey, hashValue) {
-      // TODO  handleSelectionConflicts(hashKey);
+    function select(hashKey, hashValue, element) {
+      handleSelectionConflicts(hashKey, hashValue, element);
       vm.selected[hashKey] = hashValue;
     }
-    function deselect(hashKey) {
+    function deselect(hashKey, element) {
       delete vm.selected[hashKey];
     }
     function deselectAll() {
@@ -181,15 +180,20 @@ function treeDirective($mdTheming, $mdUtil) {
     // handle selection restrictions set by `[restrict-selection]` attr
     // TODO how do i invoke this if there is no controller to call
     // could add $$depth to data
-    function handleSelectionConflicts() {
+    function handleSelectionConflicts(hashKey, hashValue, element) {
       var restictions = getSelectionRestrictions();
       if (restictions.single) { deselectAll(); }
-      // var depth = getDepth(hashKey);
+      var depth = hashValue.$$depth;
       var conflictingDepths = Object.keys(vm.selected).filter(function (_hashKey) {
-        return branches[_hashKey].getDepth() !== depth;
+        return vm.selected[_hashKey].$$depth !== depth;
       });
       if (restictions.depth && conflictingDepths.length) {
-        conflictingDepths.forEach(deselect);
+        // conflictingDepths.forEach(deselect);
+        // TODO make reference between item and element so we can optimize rendering
+        deselectAll();
+        vm.selected[hashKey] = hashValue;
+        refreshViewValue();
+        element.setAttribute('selected', '');
       }
     }
 
@@ -263,7 +267,7 @@ function treeDirective($mdTheming, $mdUtil) {
           branch.setAttribute('selected', 'selected');
         }
         item.$$selected = !item.$$selected;
-        toggleSelect(_isSelected, hashGetter(item), item);
+        toggleSelect(_isSelected, hashGetter(item), item, branch);
         e.stopPropagation();
       } else {
         toggleBranchClick(e, item, branch);

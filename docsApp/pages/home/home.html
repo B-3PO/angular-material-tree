@@ -1,27 +1,29 @@
-<input ng-model="searchTerm" />
 <div layout="row">
-  <md-tree ng-model="vm.selectedItems" restrict-selection="depth" flex>
-    <md-branch branch-repeat="location in vm.locationData | filter: searchTerm | orderBy: location.name" class="md-2-line" select>
-      <div class="md-branch-text">
-        <h3>{{location.name}}</h3>
-        <p>Location</p>
-      </div>
-
-      <md-branch branch-repeat="menu in location.menus | filter: searchTerm | orderBy: menu.name" class="md-2-line" select>
+  <div layout="column" flex>
+    <input type="search" style="line-height: 48px; padding-left: 16px; border: none; outline: none;" placeholder="Search..." ng-model="searchTerm" />
+    <md-tree ng-model="vm.selectedItems" restrict-selection="depth" open-on-filter="searchTerm" flex>
+      <md-branch branch-repeat="location in vm.locationData | filter: searchTerm | orderBy: location.name" class="md-2-line" select>
         <div class="md-branch-text">
-          <h3>{{menu.name}}</h3>
-          <p>Menu</p>
+          <h3>{{location.name}}</h3>
+          <p>Location</p>
         </div>
 
-        <md-branch branch-repeat="item in menu.items | filter: searchTerm | orderBy: item.name" class="md-2-line">
+        <md-branch branch-repeat="menu in location.menus | filter: searchTerm | orderBy: menu.name" class="md-2-line" select>
           <div class="md-branch-text">
-            <h3>{{item.name}}</h3>
-            <p>Item</p>
+            <h3>{{menu.name}}</h3>
+            <p>Menu</p>
           </div>
+
+          <md-branch branch-repeat="item in menu.items | filter: searchTerm | orderBy: item.name" class="md-2-line" select>
+            <div class="md-branch-text">
+              <h3>{{item.name}}</h3>
+              <p>Item</p>
+            </div>
+          </md-branch>
         </md-branch>
       </md-branch>
-    </md-branch>
-  </md-tree>
+    </md-tree>
+  </div>
 
   <div class="master-panel closed">
     <h4 style="width: 120px; margin: 0 auto; padding-top: 16px;">Master Panel</h4>

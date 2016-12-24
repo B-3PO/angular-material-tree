@@ -13,18 +13,18 @@ function HomeController($scope) {
   }, true);
 
 
-  vm.locationData = [
+  vm.locationData2 = [
     {
       id: 1,
-      name: 'One',
+      name: 'Location One',
       menus: [
         {
           id: 1,
-          name: 'One',
+          name: 'Menu One',
           items: [
             {
               id: 1,
-              name: 'One'
+              name: 'Item One'
             }
           ]
         }
@@ -32,15 +32,15 @@ function HomeController($scope) {
     },
     {
       id: 2,
-      name: 'Two',
+      name: 'Location Two',
       menus: [
         {
           id: 2,
-          name: 'Two',
+          name: 'Menu Two',
           items: [
             {
               id: 2,
-              name: 'Two'
+              name: 'Item Two'
             }
           ]
         }
@@ -48,7 +48,7 @@ function HomeController($scope) {
     }
   ];
 
-  vm.locationData2 = [
+  vm.locationData = [
     {
       id: 1,
       name: 'Smashburger texas Austin north',
