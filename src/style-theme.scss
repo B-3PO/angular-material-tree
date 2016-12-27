@@ -3,7 +3,7 @@ md-branch.md-THEME_NAME-theme {
     fill: '{{foreground-2}}';
   }
 
-  &.md-open {
+  &.md-open:not(.md-tip) {
     & > .md-branch-inner {
       border-bottom-color: '{{foreground-4}}';
     }
