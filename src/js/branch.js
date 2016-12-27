@@ -45,19 +45,21 @@ function branchDirective($parse, $document, $mdUtil, $filter, $$mdTree) {
       var isFilterOpen = false;
       if (isOpen) { startWatching(); }
 
+
       scope.$mdBranchFilter = function (value) {
-        if (value && value.length > 2) {
+        var filtered = $filter('filter')(value);
+        if (filtered && filtered.length > 2) {
           isFilterOpen = true;
           blocks.forEach(function (block) {
             $$mdTree.filterOpen(block);
           });
-        } else if ((!value || value.length < 3) && isFilterOpen) {
+        } else if ((!filtered || filtered.length < 3) && isFilterOpen) {
           isFilterOpen = false;
           blocks.forEach(function (block) {
             $$mdTree.filterClose(block);
           });
         }
-        return $filter('filter')(value);
+        return filtered;
       }
 
 
@@ -206,14 +208,27 @@ function branchDirective($parse, $document, $mdUtil, $filter, $$mdTree) {
         items[index].$$depth = $scope.$depth;
       }
 
+
+      // upate open state
+      // disconnect/reconnect scopes
+      // start watching for open items
       function updateState($scope, index) {
         var item = items ? items[index] : undefined;
         var element = $scope.$element && $scope.$element[0] ? $scope.$element : undefined;
+
+        // reconnect all scopes
+        $mdUtil.reconnectScope($scope);
+        element.toggleClass('md-open', item.$$isOpen);
+
+        // wait till next digest to change state so we do not get into an ifinite loop
         $mdUtil.nextTick(function () {
-          element.toggleClass('md-open', item.$$isOpen);
+          // if open then watch the data
           if (item.$$isOpen) {
-            $mdUtil.reconnectScope($scope);
             $scope.startWatching();
+
+          // sconnect scopes that are closed
+          } else {
+            $mdUtil.disconnectScope($scope);
           }
         });
       }
