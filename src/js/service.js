@@ -34,6 +34,7 @@ function treeService($mdUtil, $animateCss) {
       .start()
       .then(function () {
         container.css('max-height', 'none');
+        container.css('opacity', '');
         container.removeClass('md-overflow md-show');
         element.removeClass('md-no-animation');
       });
@@ -59,6 +60,7 @@ function treeService($mdUtil, $animateCss) {
       })
       .start()
       .then(function () {
+        container.css('opacity', '');
         container.removeClass('md-overflow md-hide');
         element.removeClass('md-no-animation');
         $mdUtil.disconnectScope(scope);
