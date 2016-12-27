@@ -11,5 +11,6 @@ angular
 
 /*@ngInject*/
 function mdTreeTheme($mdThemingProvider, TREE_THEME) {
+  // register theme styles
   $mdThemingProvider.registerStyles(TREE_THEME);
 }

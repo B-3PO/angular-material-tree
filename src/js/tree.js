@@ -1,3 +1,10 @@
+// TODO Add key controls
+//      * Down Arrow: select next item
+//      * Up Arrow: select previous item
+//      * Left Arrow: open branch or select next item
+//      * Rigth Arrow: close branch or select previous item
+//      * Enter: open or select branch. When should open or select happend?
+//      * Tab: open/close branch
 angular
   .module('angular-material-tree')
   .directive('mdTree', treeDirective);
@@ -45,38 +52,41 @@ function treeDirective($mdTheming, $mdUtil) {
       vm.ngModel.$validators['md-multiple'] = validateArray;
       vm.ngModel.$render = modelRender;
 
+
+      // watch ng model
       $scope.$watchCollection(binding, function(value) {
         if (validateArray(value)) { modelRender(value); }
       });
 
-      ngModel.$isEmpty = function(value) {
-        return !value || value.length === 0;
-      };
-
+      // handle all click interactions for the tree
       $element.on('click', handleClicks);
 
       function validateArray(modelValue, viewValue) {
-        return angular.isArray(modelValue || viewValue || []);
+        return Array.isArray(modelValue || viewValue || []);
       }
     }
 
     // ngmodel renderer
     function modelRender() {
       var newSelectedValues = vm.ngModel.$modelValue || vm.ngModel.$viewValue || [];
-      if (!angular.isArray(newSelectedValues)) { return; }
+      if (!Array.isArray(newSelectedValues)) { return; }
 
-      var oldSelected = Object.keys(vm.selected);
-      var newSelectedHashes = newSelectedValues.map(hashGetter);
+      var oldSelected = Object.keys(vm.selected); // current selectiom, before change
+      var newSelectedHashes = newSelectedValues.map(hashGetter); // new selections from ngModel
       var deselected = oldSelected.filter(function(hash) {
         return newSelectedHashes.indexOf(hash) === -1;
       });
 
+      // deselect items that are no longer in ngModel
       deselected.forEach(deselect);
+      // select all in ngModel arr
       newSelectedHashes.forEach(function (hashKey, i) {
         select(hashKey, newSelectedValues[i]);
       });
     }
 
+
+    // get or set hashkey on data object
     function hashGetter(value) {
       if (typeof value === 'object' && value !== null) {
         return 'object_' + (value.$$mdBranchId || (value.$$mdBranchId = ++branchNextId));
@@ -84,6 +94,7 @@ function treeDirective($mdTheming, $mdUtil) {
       return value;
     }
 
+    // toggle selection and refesh ngModel
     function toggleSelect(isSelected, hashKey, hashValue, element) {
       if (!isSelected) {
         select(hashKey, hashValue, element);
@@ -99,6 +110,8 @@ function treeDirective($mdTheming, $mdUtil) {
     function deselect(hashKey, element) {
       delete vm.selected[hashKey];
     }
+
+    // delselect all and update elements
     function deselectAll() {
       Object.keys(vm.selected).forEach(deselect);
       Array.prototype.slice.call($element[0].querySelectorAll('md-branch[selected]')).forEach(function (el) {
@@ -106,41 +119,49 @@ function treeDirective($mdTheming, $mdUtil) {
       });
     }
 
+    // set open state of branch and run animations
     function toggleOpen(hashKey, hashValue, branchElement) {
       var isOpen = !vm.opened[hashKey];
       if (isOpen) {
         vm.opened[hashKey] = hashValue;
         hashValue.$$isOpen = true;
-        $$mdTree.open(branchElement);
+        $$mdTree.open(branchElement); // animate open
       } else {
         delete vm.opened[hashKey];
         hashValue.$$isOpen = false;
-        $$mdTree.close(branchElement);
+        $$mdTree.close(branchElement); // animate closed
       }
     }
 
 
     // handle selection restrictions set by `[restrict-selection]` attr
-    // TODO how do i invoke this if there is no controller to call
-    // could add $$depth to data
     function handleSelectionConflicts(hashKey, hashValue, element) {
       var restictions = getSelectionRestrictions();
       if (restictions.single) { deselectAll(); }
       var depth = hashValue.$$depth;
-      var conflictingDepths = Object.keys(vm.selected).filter(function (_hashKey) {
-        return vm.selected[_hashKey].$$depth !== depth;
-      });
-      if (restictions.depth && conflictingDepths.length) {
-        // conflictingDepths.forEach(deselect);
-        // TODO make reference between item and element so we can optimize rendering
-        deselectAll();
-        vm.selected[hashKey] = hashValue;
-        refreshViewValue();
-        element.setAttribute('selected', '');
+
+      if (restictions.depth) {
+        // list of items that do not have the same depth as last selected item
+        var conflictingDepths = Object.keys(vm.selected).filter(function (_hashKey) {
+          return vm.selected[_hashKey].$$depth !== depth;
+        });
+
+        if (conflictingDepths.length) {
+          // TODO make reference between item and element so we can optimize rendering
+          // currently I am assuming that only one item is clicked at a time
+          deselectAll();
+          vm.selected[hashKey] = hashValue; // add targeted item
+          refreshViewValue();
+          element.setAttribute('selected', ''); // updated tageted element
+        }
       }
     }
 
     // gets selection restrictions from the `[restrict-selection]` attr and puts it into an object
+    // ```html
+    // <md-tree restrict-selection="depth"></md-tree>
+    // <md-tree restrict-selection="single"></md-tree>
+    // ```
     function getSelectionRestrictions() {
       if (!selectionRestictions) {
         selectionRestictions = {};
@@ -153,6 +174,7 @@ function treeDirective($mdTheming, $mdUtil) {
     }
 
 
+    // refresh ngModel
     function refreshViewValue() {
       var branchValue;
       var newValue;
@@ -166,9 +188,9 @@ function treeDirective($mdTheming, $mdUtil) {
         if (branchValue) {
           values.push(branchValue);
         }
-
         hashKey = hashKeys.pop();
       }
+
 
       newValue = values;
       prevValue = vm.ngModel.$modelValue;
@@ -184,10 +206,11 @@ function treeDirective($mdTheming, $mdUtil) {
 
     function handleClicks(e) {
       var closest = getClosest(e.target); // closest clickable element (arrow, checkbox, branch)
-      var branch = getBranch(closest);
-      if (!branch) { return; };
+      var branch = getBranch(closest); // branch element
+      if (!branch) { return; }; // do not proceed if element is not inside a branch
+
       var branchScope = angular.element(branch).scope();
-      var item = branchScope[branchScope.repeatName];
+      var item = branchScope[branchScope.repeatName]; // ngModel data
 
       // toggle branch
       if (isArrow(closest)) {
@@ -199,11 +222,13 @@ function treeDirective($mdTheming, $mdUtil) {
         var _isSelected = isSelected(branch);
         var item = branchScope[branchScope.repeatName];
 
+        // if selectable and not clicked on checkbox then deselct all
         if (!isCheckbox(closest)) {
           if (Object.keys(vm.selected).length > 1) { _isSelected = false; }
           deselectAll();
         }
 
+        // set element select state
         if (_isSelected) {
           branch.removeAttribute('selected');
         } else {
@@ -223,6 +248,8 @@ function treeDirective($mdTheming, $mdUtil) {
       e.stopPropagation();
     }
 
+
+    // find closest clickable element
     function getClosest(el) {
       if (valid(el)) { return el; }
       var parent = el.parentNode;
@@ -233,10 +260,11 @@ function treeDirective($mdTheming, $mdUtil) {
       return null;
 
       function valid(el) {
-        return el.nodeName === 'MD-BRANCH' || el.classList.contains('md-branch-icon-container') || el.classList.contains('checkbox-container');
+        return el.nodeName === 'MD-BRANCH' || isArrow(el) || isCheckbox(el);
       }
     }
 
+    // get branch element
     function getBranch(el) {
       if (!el) { return null; }
       if (el.nodeName === 'MD-BRANCH') { return el; }

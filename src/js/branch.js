@@ -3,7 +3,9 @@ angular
   .directive('mdBranch', branchDirective);
 
 
+// checkbox html
 var CHECKBOX_SELECTION_INDICATOR = angular.element('<div class="checkbox-container"><div class="checkbox-icon"></div></div>');
+// branch arrow icon svg
 var BRANCH_ARROW_TEMPLATE = angular.element('<div class="md-branch-icon-container">'+
   '<div class="md-branch-icon">'+
     '<svg fill="#000000" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">'+
@@ -45,14 +47,18 @@ function branchDirective($parse, $document, $mdUtil, $filter, $$mdTree) {
       var isFilterOpen = false;
       if (isOpen) { startWatching(); }
 
-
+      // standard angular filter wrapped so we can determian if the parent should be opened for closed
       scope.$mdBranchFilter = function (value) {
         var filtered = $filter('filter')(value);
+
+        // open branches if filter string is greater then 2 and items have been found
         if (filtered && filtered.length > 2) {
           isFilterOpen = true;
           blocks.forEach(function (block) {
             $$mdTree.filterOpen(block);
           });
+
+        // close branches if filter is less than 3 characters or no items have been found
         } else if ((!filtered || filtered.length < 3) && isFilterOpen) {
           isFilterOpen = false;
           blocks.forEach(function (block) {
@@ -63,16 +69,20 @@ function branchDirective($parse, $document, $mdUtil, $filter, $$mdTree) {
       }
 
 
+      // watch model data
       function startWatching() {
         if (dataWatcher) { return; }
         dataWatcher = scope.$watchCollection(repeatListExpression, updateBranch);
       }
+      // kill watcher
       function killWatching() {
         if (typeof dataWatcher === 'function') {
           dataWatcher();
           dataWatcher = undefined;
         }
       }
+
+      // expose methods to scope
       scope.startWatching = startWatching;
       scope.killWatching = killWatching;
 
@@ -87,12 +97,10 @@ function branchDirective($parse, $document, $mdUtil, $filter, $$mdTree) {
         var index;
         var length;
         var maxIndex;
-        var lengthChanged = false;
         var newBlocks = [];
         var _itemsLength = newItems && newItems.length || 0;
 
         if (_itemsLength !== itemsLength) {
-          lengthChanged = true;
           itemsLength = _itemsLength;
         }
         items = newItems;
@@ -137,43 +145,41 @@ function branchDirective($parse, $document, $mdUtil, $filter, $$mdTree) {
       }
 
 
+      // store block in memory and remove it from the dom.
       function poolBlock(index) {
         pooledBlocks.unshift(blocks[index]);
         blocks[index].element[0].parentNode.removeChild(blocks[index].element[0]);
         delete blocks[index];
       }
 
+      // update block scope and state
       function updateBlock(block, index) {
         blocks[index] = block;
 
-        if (block.new) { updateNewBlock(block); }
+        if (block.new) { updateNewBlock(block); } // configure template for new blocks
         if (!block.new && (block.scope.$index === index && block.scope[repeatName] === items[index])) {
-          updateState(block.scope,  index);
+          updateState(block.scope,  index); // update state if a block is nore or changes
           return;
         }
         block.new = false;
+
         // Update and digest the block's scope.
         updateScope(block.scope, index);
         updateState(block.scope,  index);
 
-        // Perform digest before re-attaching the block.
-        // Any resulting synchronous dom mutations should be much faster as a result.
-        // This might break some directives, but I'm going to try it for now.
         if (!scope.$root.$$phase) {
           block.scope.$digest();
         }
       }
 
 
-      // NOTE this might cause problems when applying a new scope
+      // NOTE Might cause problems when applying a new scope
       // place contents into containers to display items correctly
       // this is only done once
       function updateNewBlock(block) {
         var isSelectable = block.element.attr('select') !== undefined;
-        // branch contents
-        var innerContainer = angular.element('<div class="md-branch-inner">');
-        // nested branched
-        var branchContainer = angular.element('<div class="md-branch-container">');
+        var innerContainer = angular.element('<div class="md-branch-inner">'); // branch contents
+        var branchContainer = angular.element('<div class="md-branch-container">'); // nested branched
         innerContainer.append(BRANCH_ARROW_TEMPLATE.clone());
         if (isSelectable) {
           block.element.addClass('md-checkbox-enabled');
@@ -188,7 +194,6 @@ function branchDirective($parse, $document, $mdUtil, $filter, $$mdTree) {
         });
         block.element.append(innerContainer);
 
-
         // add branches
         if (branchContainer[0].childNodes.length) {
           block.element.append(branchContainer);
@@ -199,10 +204,11 @@ function branchDirective($parse, $document, $mdUtil, $filter, $$mdTree) {
         }
       }
 
+      // Change the model value attached to the scope
       function updateScope($scope, index) {
-        $scope.$index = index;
-        $scope.repeatName = repeatName;
-        $scope[repeatName] = items && items[index];
+        $scope.$index = index; // data index
+        $scope.repeatName = repeatName; // data property
+        $scope[repeatName] = items && items[index]; // data
         $scope.$odd = !($scope.$even = (index & 1) === 0);
         $scope.$depth = ($scope.$parent.$depth + 1) || 0;
         items[index].$$depth = $scope.$depth;
@@ -233,6 +239,7 @@ function branchDirective($parse, $document, $mdUtil, $filter, $$mdTree) {
         });
       }
 
+      // walk dome to find tree
       function getTreeCtrl(scope) {
         if (scope.treeCtrl) { return scope.treeCtrl; }
         var parent = scope.$element[0].parentNode;
@@ -246,6 +253,7 @@ function branchDirective($parse, $document, $mdUtil, $filter, $$mdTree) {
         console.error('`<md-branch>` element is not nested in a `<md-tree>` element. Selection will not work');
       }
 
+      // set initial state on data
       function initState(item) {
         if (item.$$isOpen === undefined) {
           Object.defineProperty(item, '$$isOpen', {
@@ -257,11 +265,14 @@ function branchDirective($parse, $document, $mdUtil, $filter, $$mdTree) {
         }
       }
 
+      // check pool for block
+      // otherwise create a new block
       function getBlock(index) {
         if (pooledBlocks.length) {
           return pooledBlocks.pop();
         }
 
+        // create new bloc
         var block;
         transclude(function(clone, scope) {
           block = {
@@ -273,12 +284,12 @@ function branchDirective($parse, $document, $mdUtil, $filter, $$mdTree) {
           updateScope(scope, index);
           initState(items[index]);
           scope.$element = clone; // attach element to scope so it can be accessed in controller
-
           parentNode.appendChild(clone[0]);
         });
         return block;
       }
 
+      // add blocks to one fragment for better performance
       function domFragmentFromBlocks(blocks) {
         var fragment = $document[0].createDocumentFragment();
         blocks.forEach(function(block) {

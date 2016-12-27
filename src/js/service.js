@@ -12,6 +12,8 @@ function treeService($mdUtil, $animateCss) {
     filterClose: filterClose
   };
 
+  // Connect scope and set it's state
+  // animate branch open
   function open(branchElement, noAnimation) {
     if (!branchElement) { return; }
 
@@ -19,8 +21,8 @@ function treeService($mdUtil, $animateCss) {
     var scope = element.scope();
     $mdUtil.reconnectScope(scope);
     scope.isOpen = true;
-    scope.startWatching();
-    if (noAnimation === true) { element.addClass('md-no-animation'); }
+    scope.startWatching(); // watch model data
+    if (noAnimation === true) { element.addClass('md-no-animation'); } // remove css transitions
 
     $mdUtil.nextTick(function () {
       var container = angular.element(element[0].querySelector('.md-branch-container'));
@@ -41,14 +43,16 @@ function treeService($mdUtil, $animateCss) {
     });
   }
 
+  // disconnect scope and set it's state
+  // animate branch closed
   function close(branchElement, noAnimation) {
     if (!branchElement) { return; }
 
     var element = angular.element(branchElement);
     var scope = element.scope();
     scope.isOpen = false;
-    scope.killWatching();
-    if (noAnimation === true) { element.addClass('md-no-animation'); }
+    scope.killWatching(); // stop watching model data
+    if (noAnimation === true) { element.addClass('md-no-animation'); } // remove css transitions
 
     $mdUtil.nextTick(function () {
       var container = angular.element(element[0].querySelector('.md-branch-container'));
@@ -68,11 +72,14 @@ function treeService($mdUtil, $animateCss) {
     });
   }
 
+  // used to animate branch open
   function getHeight(element) {
     return element[0].scrollHeight + 'px';
   }
 
 
+  // open branch for filtering
+  // No animations
   function filterOpen(block) {
     $mdUtil.reconnectScope(block.scope);
     block.scope.isOpen = true;
@@ -82,6 +89,8 @@ function treeService($mdUtil, $animateCss) {
     container.css('max-height', 'none');
   }
 
+  // close branch for filtering
+  // No animations
   function filterClose(block) {
     $mdUtil.disconnectScope(block.scope);
     block.scope.isOpen = false;

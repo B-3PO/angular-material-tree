@@ -14,7 +14,7 @@
             <p>Menu</p>
           </div>
 
-          <md-branch branch-repeat="item in menu.items | filter: searchTerm | orderBy: item.name" class="md-2-line" select>
+          <md-branch branch-repeat="item in menu.items | filter: $mdBranchFilter(searchTerm) | orderBy: item.name" class="md-2-line" select>
             <div class="md-branch-text">
               <h3>{{item.name}}</h3>
               <p>Item</p>

@@ -1,3 +1,6 @@
+// TODO Implament branch templates
+//      May need to manually transclude element
+
 angular
   .module('angular-material-tree')
   .directive('mdBranchTemplates', branchTemplateDirective);
