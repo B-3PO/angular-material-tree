@@ -1,3 +1,9 @@
+// TODO Add key controls
+//      * Enter: Shoudl select happen if branch is deepest descendent?
+//      * Shift+Enter: multiple select
+
+// TODO add third state to checkbox to show children selected
+
 angular
   .module('angular-material-tree')
   .directive('mdBranch', branchDirective);
@@ -16,7 +22,7 @@ var BRANCH_ARROW_TEMPLATE = angular.element('<div class="md-branch-icon-containe
 '</div>');
 
 /*@ngInject*/
-function branchDirective($parse, $document, $mdUtil, $filter, $$mdTree) {
+function branchDirective($parse, $document, $mdUtil, $filter, $$mdTree, $mdConstant) {
   return {
     restrict: 'E',
     require: ['?^mdBranchTemplates'],
@@ -40,6 +46,7 @@ function branchDirective($parse, $document, $mdUtil, $filter, $$mdTree) {
     return function postLink(scope, element, attrs, ctrls, transclude) {
       var dataWatcher;
       var items;
+      var keyCodes = $mdConstant.KEY_CODE;
       var blocks = [];
       var pooledBlocks = [];
       var itemsLength = 0;
@@ -66,7 +73,7 @@ function branchDirective($parse, $document, $mdUtil, $filter, $$mdTree) {
           });
         }
         return filtered;
-      }
+      };
 
 
       // watch model data
@@ -147,6 +154,9 @@ function branchDirective($parse, $document, $mdUtil, $filter, $$mdTree) {
 
       // store block in memory and remove it from the dom.
       function poolBlock(index) {
+        blocks[index].element
+          .off('blur', onBlur)
+          .off('focus', onFocus);
         pooledBlocks.unshift(blocks[index]);
         blocks[index].element[0].parentNode.removeChild(blocks[index].element[0]);
         delete blocks[index];
@@ -239,20 +249,6 @@ function branchDirective($parse, $document, $mdUtil, $filter, $$mdTree) {
         });
       }
 
-      // walk dome to find tree
-      function getTreeCtrl(scope) {
-        if (scope.treeCtrl) { return scope.treeCtrl; }
-        var parent = scope.$element[0].parentNode;
-        while (parent && parent !== document.body) {
-          if (parent.nodeName === 'MD-TREE') {
-            scope.treeCtrl = angular.element(parent).controller('mdTree');
-            return scope.treeCtrl;
-          }
-          parent = parent.parentNode;
-        }
-        console.error('`<md-branch>` element is not nested in a `<md-tree>` element. Selection will not work');
-      }
-
       // set initial state on data
       function initState(item) {
         if (item.$$isOpen === undefined) {
@@ -285,6 +281,11 @@ function branchDirective($parse, $document, $mdUtil, $filter, $$mdTree) {
           initState(items[index]);
           scope.$element = clone; // attach element to scope so it can be accessed in controller
           parentNode.appendChild(clone[0]);
+          scope.$on('$destroy', function () {
+            clone
+              .off('blur', onBlur)
+              .off('focus', onFocus);
+          });
         });
         return block;
       }
@@ -294,8 +295,184 @@ function branchDirective($parse, $document, $mdUtil, $filter, $$mdTree) {
         var fragment = $document[0].createDocumentFragment();
         blocks.forEach(function(block) {
           fragment.appendChild(block.element[0]);
+          block.element.attr('tabindex', '0');
+          block.element
+            .on('blur', onBlur)
+            .on('focus', onFocus);
         });
         return fragment;
+      }
+
+
+      function onBlur(e) {
+        angular.element(e.target)
+          .removeClass('md-focused')
+          .off('keydown', onKeydown);
+      }
+
+      function onFocus(e) {
+        angular.element(e.target)
+          .addClass('md-focused')
+          .on('keydown', onKeydown);
+      }
+
+      function onKeydown(e) {
+        switch (e.keyCode) {
+          case keyCodes.UP_ARROW:
+            return focusPrevious(e.target);
+          case keyCodes.DOWN_ARROW:
+            return focusNext(e.target);
+          case keyCodes.RIGHT_ARROW:
+            return openNextBranch(e.target);
+          case keyCodes.LEFT_ARROW:
+            return closePrevBranch(e.target);
+          case $$mdTree.isShiftPressed() && keyCodes.SPACE:
+          case $$mdTree.isShiftPressed() && keyCodes.ENTER:
+            return selectBranch(e.target, false);
+          case keyCodes.SPACE:
+          case keyCodes.ENTER:
+            return handleEnter(e.target);
+        }
+      }
+
+      // recusivly find next branch
+      function focusNext(branchElement) {
+        branchElement = angular.element(branchElement);
+        var next;
+        var branchContainer = branchElement[0].querySelector('.md-branch-container');
+        if (branchElement.hasClass('md-open') && branchContainer) {
+          // find nearest child branch
+          Array.prototype.slice.call(branchContainer.children).every(function (el) {
+            if (el.nodeName === 'MD-BRANCH') { next = angular.element(el); }
+            return !next;
+          });
+
+          // if no child branches are found try to get next branch
+          if (!next) { next = branchElement.next(); }
+        } else {
+          next = branchElement.next();
+        }
+
+        // recursively find next branch
+        if (!next || !next.length) { next = findNext(branchElement); }
+        if (next && next.length) { next.focus(); }
+      }
+
+      // recusivly find previous branch
+      function focusPrevious(branchElement) {
+        branchElement = angular.element(branchElement);
+        var previous = branchElement[0].previousElementSibling;
+
+        // if no previous branch exists then step out to next highest layer
+        if (!previous) {
+          previous = $$mdTree.getBranch(branchElement[0].parentNode);
+
+        // if found then find the deepest and lowest sub branch
+        } else {
+          previous = findDeepest(previous);
+        }
+
+        // focus on element
+        if (previous) { angular.element(previous).focus(); }
+      }
+
+      // keep stepping out and look for next branch that we can focus on
+      function findNext(el) {
+        var branch = $$mdTree.getBranch(el[0].parentNode);
+        if (!branch) { return null; }
+        var next = angular.element(branch).next();
+        if (next && next.length) { return next; }
+        return findNext(angular.element(branch));
+      }
+
+      function findDeepest(el) {
+        var next;
+        if (!el || el.nodeName !== 'MD-BRANCH') { return null; }
+        if ($$mdTree.isOpen(el)) {
+          var branchContainer = el.querySelector('.md-branch-container');
+          if (branchContainer) {
+            Array.prototype.slice.call(branchContainer.children).reverse().every(function (el) {
+              if (el.nodeName === 'MD-BRANCH') { next = el; }
+              return !next;
+            });
+            if (next) { return findDeepest(next); }
+          }
+        }
+        return el;
+      }
+
+      // open branch or select next
+      function openNextBranch(branchElement) {
+        if (!$$mdTree.isOpen(branchElement)) {
+          var arrow = $$mdTree.getArrow(branchElement);
+          if (arrow && !$$mdTree.isTip(branchElement)) {
+            // open branch by simulating click
+            $$mdTree.getTreeElement().triggerHandler({
+              type: 'click',
+              target: arrow
+            });
+          } else {
+            focusNext(branchElement);
+          }
+        } else {
+          focusNext(branchElement);
+        }
+      }
+
+      // close branch or select previous
+      function closePrevBranch(branchElement) {
+        if ($$mdTree.isOpen(branchElement)) {
+          var arrow = $$mdTree.getArrow(branchElement);
+          if (arrow) {
+            // close branch by simulating click
+            $$mdTree.getTreeElement().triggerHandler({
+              type: 'click',
+              target: arrow
+            });
+          } else {
+            focusPrevious(branchElement);
+          }
+        } else {
+          focusPrevious(branchElement);
+        }
+      }
+
+      // open/close branch
+      function handleEnter(branchElement) {
+        // single select branch
+        if ($$mdTree.hasCheckbox(branchElement)) {
+          selectBranch(branchElement, true);
+          // TODO invoke single select callback
+
+        // toggle open/close branch
+        } else {
+          toggleOpen(branchElement);
+        }
+      }
+
+      function toggleOpen(branchElement) {
+        if ($$mdTree.canOpen(branchElement) && !$$mdTree.isTip(branchElement)) {
+          // open branch by simulating click
+          $$mdTree.getTreeElement().triggerHandler({
+            type: 'click',
+            target: $$mdTree.getArrow(branchElement)
+          });
+        }
+      }
+
+      function selectBranch(branchElement, single) {
+        var el;
+        if (single === true) {
+          el = branchElement.querySelector('.md-branch-inner');
+        } else {
+          el = $$mdTree.getCheckbox(branchElement);
+        }
+        if (el) {
+          $$mdTree.getTreeElement().triggerHandler({
+            type: 'click',
+            target: el
+          });
+        }
       }
 
     };

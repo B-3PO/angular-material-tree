@@ -4,13 +4,51 @@ angular
 
 
 function treeService($mdUtil, $animateCss) {
+  var treeCtrl;
+  var treeElement;
+  // track shift pressed
+  var shiftPressed = false;
+  document.addEventListener('keydown', function (e) {
+    if (e.keyCode === 16) { shiftPressed = true; }
+  });
+  document.addEventListener('keyup', function (e) {
+    if (e.keyCode === 16) { shiftPressed = false; }
+  });
+
   return {
+    init: init,
     open: open,
     close: close,
-
+    canOpen: canOpen,
     filterOpen: filterOpen,
-    filterClose: filterClose
+    filterClose: filterClose,
+    getTreeCtrl: getTreeCtrl,
+    getTreeElement: getTreeElement,
+    getBranch: getBranch,
+    getArrow: getArrow,
+    isShiftPressed: isShiftPressed,
+    isArrow: isArrow,
+    isSelectOn: isSelectOn,
+    isSelected: isSelected,
+    isCheckbox: isCheckbox,
+    isOpen: isOpen,
+    isTip: isTip,
+    hasCheckbox: hasCheckbox,
+    getCheckbox: getCheckbox
   };
+
+  function init(_treeCtrl, _treeElement) {
+    treeCtrl = _treeCtrl;
+    treeElement = _treeElement;
+  }
+
+  function getTreeCtrl() {
+    return treeCtrl;
+  }
+
+  function getTreeElement() {
+    return treeElement;
+  }
 
   // Connect scope and set it's state
   // animate branch open
@@ -98,5 +136,93 @@ function treeService($mdUtil, $animateCss) {
     block.element.removeClass('md-open');
     var container = angular.element(block.element[0].querySelector('.md-branch-container'));
     container.css('max-height', '');
+  }
+
+  // get branch element
+  function getBranch(el) {
+    if (!el) { return null; }
+    if (el.nodeName === 'MD-BRANCH') { return el; }
+    var parent = el.parentNode;
+    while (parent && parent !== document.body) {
+      if (parent.nodeName === 'MD-BRANCH') { return parent; }
+      parent = parent.parentNode;
+    }
+    return null;
+  }
+
+  function isShiftPressed() {
+    return shiftPressed;
+  }
+
+  function isArrow(el) {
+    return el.classList.contains('md-branch-icon-container');
+  }
+
+  function isSelectOn(el) {
+    return el.hasAttribute('select');
+  }
+
+  function isSelected(el) {
+    return el.hasAttribute('selected');
+  }
+
+  function isCheckbox(el) {
+    return el.classList.contains('checkbox-container');
+  }
+
+  function isBranch(el) {
+    return el.nodeName === 'MD-BRANCH';
+  }
+
+  function isBranchContainer(el) {
+    return el.classList.contains('md-branch-icon-container');
+  }
+
+  function isBranchInner(el) {
+    return el.classList.contains('isBranchContainer');
+  }
+
+  function isOpen(branchElement) {
+    return branchElement.classList.contains('md-open');
+  }
+
+  function isTip(branchElement) {
+    return branchElement.classList.contains('md-tip');
+  }
+
+  function hasCheckbox(el) {
+    return !!getCheckbox(el);
+  }
+
+  function getCheckbox(el) {
+    if (isBranch(el)) {
+      var inner = el.firstChild;
+      if (!inner) { return null; }
+      return inner.querySelector('.checkbox-container');
+    } else if (isBranchInner(el)) {
+      return el.querySelector('.checkbox-container');
+    } else if (isCheckbox(el)) {
+      return el;
+    }
+
+    return null;
+  }
+
+  function canOpen(el) {
+    return !!getArrow(el);
+  }
+
+  function getArrow(el) {
+    if (isBranch(el)) {
+      var inner = el.firstChild;
+      if (!inner) { return null; }
+      return inner.querySelector('.md-branch-icon-container');
+    } else if (isBranchInner(el)) {
+      return el.querySelector('.md-branch-icon-container');
+    } else if (isCheckbox(el)) {
+      return el;
+    }
+
+    return null;
   }
 }

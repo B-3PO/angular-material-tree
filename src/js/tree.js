@@ -1,10 +1,3 @@
-// TODO Add key controls
-//      * Down Arrow: select next item
-//      * Up Arrow: select previous item
-//      * Left Arrow: open branch or select next item
-//      * Rigth Arrow: close branch or select previous item
-//      * Enter: open or select branch. When should open or select happend?
-//      * Tab: open/close branch
 angular
   .module('angular-material-tree')
   .directive('mdTree', treeDirective);
@@ -45,6 +38,7 @@ function treeDirective($mdTheming, $mdUtil) {
     vm.selected = {};
     vm.opened = {};
     vm.init = init;
+    $$mdTree.init(vm, $element); //make tree accesable to branch, via service
 
     // setup ngModel and make it available to controller
     function init(ngModel, binding) {
@@ -206,40 +200,84 @@ function treeDirective($mdTheming, $mdUtil) {
 
     function handleClicks(e) {
       var closest = getClosest(e.target); // closest clickable element (arrow, checkbox, branch)
-      var branch = getBranch(closest); // branch element
-      if (!branch) { return; }; // do not proceed if element is not inside a branch
+      var branch = $$mdTree.getBranch(closest); // branch element
+      if (!branch) { return; } // do not proceed if element is not inside a branch
 
       var branchScope = angular.element(branch).scope();
       var item = branchScope[branchScope.repeatName]; // ngModel data
 
       // toggle branch
-      if (isArrow(closest)) {
+      if ($$mdTree.isArrow(closest)) {
         toggleBranchClick(e, item, branch);
         return;
       }
 
-      if (isSelectOn(branch)) {
-        var _isSelected = isSelected(branch);
-        var item = branchScope[branchScope.repeatName];
-
-        // if selectable and not clicked on checkbox then deselct all
-        if (!isCheckbox(closest)) {
-          if (Object.keys(vm.selected).length > 1) { _isSelected = false; }
-          deselectAll();
-        }
+      if ($$mdTree.isSelectOn(branch)) {
+        var _isSelected = $$mdTree.isSelected(branch);
+        item = branchScope[branchScope.repeatName];
 
         // set element select state
-        if (_isSelected) {
-          branch.removeAttribute('selected');
-        } else {
-          branch.setAttribute('selected', 'selected');
-        }
+        // if ($$mdTree.isShiftPressed()) {
+          // rangeSelect(branch);
+        // } else {
+          // if selectable and not clicked on checkbox then deselct all
+          if (!$$mdTree.isCheckbox(closest)) {
+            if (Object.keys(vm.selected).length > 1) { _isSelected = false; }
+            deselectAll();
+          }
+
+          if (_isSelected) {
+            branch.removeAttribute('selected');
+          } else {
+            branch.setAttribute('selected', 'selected');
+          }
+        // }
         item.$$selected = !item.$$selected;
         toggleSelect(_isSelected, hashGetter(item), item, branch);
         e.stopPropagation();
       } else {
         toggleBranchClick(e, item, branch);
       }
+    }
+
+    // TODO this currently will only work visually, needs to set model data
+    // NOTE may want to add selection memory so we can select from last selection
+    // Currentl we select from top if possible then from bottom
+    function rangeSelect(branchElement) {
+      var siblings = [];
+      var foundSelected = false;
+      // var foundTargeted = false;
+      var branches = Array.prototype.slice.call(branchElement.parentNode.children).filter(function (el) {
+        return el.nodeName === 'MD-BRANCH';
+      });
+
+      // select down
+      var i = 0;
+      var end = branches.indexOf(branchElement);
+      while (i < end) {
+        if (!foundSelected && branches[i].hasAttribute('selected')) { foundSelected = true; }
+        if (foundSelected) { siblings.push(branches[i]); }
+        i += 1;
+      }
+
+      // select up
+      if (!foundSelected) {
+        i = end+1;
+        end = branches.length;
+        while (i < end) {
+          siblings.push(branches[i]);
+          if (!foundSelected && branches[i].hasAttribute('selected')) { foundSelected = true; }
+          i += 1;
+        }
+      }
+
+      deselectAll();
+      if (foundSelected) {
+        siblings.forEach(function (el) {
+          el.setAttribute('selected', 'selected');
+        });
+      }
+      branchElement.setAttribute('selected', 'selected');
     }
 
     // set open state
@@ -260,36 +298,8 @@ function treeDirective($mdTheming, $mdUtil) {
       return null;
 
       function valid(el) {
-        return el.nodeName === 'MD-BRANCH' || isArrow(el) || isCheckbox(el);
+        return el.nodeName === 'MD-BRANCH' || $$mdTree.isArrow(el) || $$mdTree.isCheckbox(el);
       }
-    }
-
-    // get branch element
-    function getBranch(el) {
-      if (!el) { return null; }
-      if (el.nodeName === 'MD-BRANCH') { return el; }
-      var parent = el.parentNode;
-      while (parent && parent !== document.body) {
-        if (parent.nodeName === 'MD-BRANCH') { return parent; }
-        parent = parent.parentNode;
-      }
-      return null;
-    }
-
-    function isArrow(el) {
-      return el.classList.contains('md-branch-icon-container');
-    }
-
-    function isSelectOn(el) {
-      return el.hasAttribute('select');
-    }
-
-    function isSelected(el) {
-      return el.hasAttribute('selected');
-    }
-
-    function isCheckbox(el) {
-      return el.classList.contains('checkbox-container');
     }
   }
 }

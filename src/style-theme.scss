@@ -40,22 +40,30 @@ md-branch.md-THEME_NAME-theme {
   }
 
 
-  &:not([disabled]) .md-branch-inner {
-    background-color: '{{background-hue-1}}';
-    &:hover {
-      background-color: '{{background-500-0.2}}';
+  &:not([disabled]) {
+    .md-branch-inner {
+      background-color: '{{background-hue-1}}';
+      &:hover {
+        background-color: '{{background-500-0.2}}';
+      }
+      &.md-icon-button:hover {
+        background-color: transparent;
+      }
     }
+
     &.md-focused {
-      background-color: '{{background-500-0.2}}';
-    }
-    &.md-icon-button:hover {
-      background-color: transparent;
+      outline: none;
+
+      & >.md-branch-inner {
+        background-color: '{{background-100}}';
+        // border-color: '{{primary-color-0.36}}';
+      }
     }
   }
 
   &.md-tip {
     .md-branch-inner {
-      background-color: '{{background-hue-2}}';
+      // background-color: '{{background-hue-2}}';
     }
   }
 }
