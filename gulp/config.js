@@ -12,5 +12,5 @@ exports.paths = {
   appPartials: docsSrcPath+'**/*.html',
   scripts: [srcPath+'**/*.js'],
   css: [srcPath+'*.scss', srcPath+'*.css', '!'+srcPath+'*spec.css', '!'+srcPath+'*-theme.scss'],
-  theme: srcPath+'*-theme.scss'
+  theme: srcPath+'style-theme.scss'
 };

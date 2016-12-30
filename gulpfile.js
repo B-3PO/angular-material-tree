@@ -14,10 +14,6 @@ var cssBuild = require('./gulp/cssBuild');
 gulp.task('cssDev', cssBuild.dev);
 gulp.task('cssRelease', cssBuild.release);
 
-var themeBuild = require('./gulp/theme');
-gulp.task('themeDev', themeBuild.dev);
-gulp.task('themeRelease', themeBuild.release);
-
 var docs = require('./gulp/docs');
 gulp.task('docsBuild', docs.build);
 gulp.task('docsInject', docs.inject);
@@ -32,8 +28,7 @@ gulp.task('buildLocal', gulpSequence(
   [
     'jsDev',
     'cssDev',
-    'docsBuild',
-    'themeDev'
+    'docsBuild'
   ],
   'docsInject'
 ));
@@ -42,8 +37,7 @@ gulp.task('release', gulpSequence(
   'cleanDist',
   [
     'jsRelease',
-    'cssRelease',
-    'themeRelease'
+    'cssRelease'
   ]
 ));
 

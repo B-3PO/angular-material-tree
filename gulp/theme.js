@@ -10,49 +10,15 @@ var concat = require('gulp-concat');
 var wrap = require('gulp-wrap');
 var ngConstant = require('gulp-ng-constant');
 var uglify = require('gulp-uglify');
+var gulpFile = require('gulp-file');
 
 
-exports.dev = function () {
-  return gulp.src(paths.theme)
-    .pipe(sass())
-    .pipe(through2.obj(function (file, enc, cb) {
-      var config = {
-        name: 'angular-material-tree',
-        deps: false,
-        constants: {
-          TREE_THEME: file.contents.toString()
-        }
-      };
-      file.contents = new Buffer(JSON.stringify(config), 'utf-8');
-      this.push(file);
-      cb();
-    }))
-    .pipe(ngConstant({wrap: false}))
-    .pipe(wrap('(function(){"use strict";<%= contents %>}());'))
-    .pipe(rename('_theme.js'))
-    .pipe(gulp.dest(paths.docs))
+
+module.exports = function injectFile() {
+  require('require-sass')();
+  return gulpFile('theme.js', wrapper(require('../'+paths.theme)));
 };
 
-
-exports.release = function () {
-  return gulp.src(paths.theme)
-    .pipe(sass())
-    .pipe(cssnano())
-    .pipe(through2.obj(function (file, enc, cb) {
-      var config = {
-        name: 'angular-material-tree',
-        deps: false,
-        constants: {
-          TREE_THEME: file.contents.toString()
-        }
-      };
-      file.contents = new Buffer(JSON.stringify(config), 'utf-8');
-      this.push(file);
-      cb();
-    }))
-    .pipe(ngConstant({wrap: false}))
-    .pipe(wrap('(function(){"use strict";<%= contents %>}());'))
-    .pipe(uglify())
-    .pipe(rename('_theme.js'))
-    .pipe(gulp.dest(paths.dist));
-};
+function wrapper(contents) {
+  return 'angular.module("angular-material-tree").constant("TREE_THEME",'+JSON.stringify(contents)+');';
+}
