@@ -7,7 +7,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git@github.com:bypasslane/angular-material-expander.git"
+    "url": "git@github.com:B-3PO/angular-material-expander.git"
   },
   "main": "index.js",
   "devDependencies": {
