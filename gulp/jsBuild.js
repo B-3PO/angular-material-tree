@@ -13,7 +13,6 @@ var ngAnnotate = require('gulp-ng-annotate');
 
 
 exports.dev = function () {
-
   return gulp.src(paths.scripts)
     .pipe(wrap('(function(){"use strict";<%= contents %>}());'))
     .pipe(jshint())
@@ -22,4 +21,21 @@ exports.dev = function () {
     .on('end', function() {
       gutil.log(gutil.colors.green('✔ JS Dev'), 'Finished');
     });
-}
+};
+
+exports.release = function () {
+  return gulp.src(paths.scripts)
+    .pipe(wrap('(function(){"use strict";<%= contents %>}());'))
+    .pipe(ngAnnotate())
+    .pipe(jshint())
+    .pipe(jshint.reporter('default'))
+    .pipe(concat('angular-material-tree.js'))
+    .pipe(stripDebug())
+    .pipe(gulp.dest(paths.dist))
+    .pipe(uglify())
+    .pipe(rename('angular-material-tree.min.js'))
+    .pipe(gulp.dest(paths.dist))
+    .on('end', function() {
+      gutil.log(gutil.colors.green('✔ JS Dev'), 'Finished');
+    });
+};
