@@ -9,6 +9,7 @@ var stripDebug = require('gulp-strip-debug');
 var rename = require("gulp-rename");
 var gutil = require('gulp-util');
 var ngAnnotate = require('gulp-ng-annotate');
+var order = require("gulp-order");
 
 var theme = require('./theme.js');
 
@@ -17,6 +18,10 @@ var theme = require('./theme.js');
 exports.dev = function () {
   return gulp.src(paths.scripts)
     .pipe(theme())
+    .pipe(order([
+      '*.js',
+      '*theme.js'
+    ]))
     .pipe(wrap('(function(){"use strict";<%= contents %>}());'))
     .pipe(jshint())
     .pipe(jshint.reporter('default'))
@@ -29,6 +34,10 @@ exports.dev = function () {
 exports.release = function () {
   return gulp.src(paths.scripts)
     .pipe(theme())
+    .pipe(order([
+      '*.js',
+      '*theme.js'
+    ]))
     .pipe(wrap('(function(){"use strict";<%= contents %>}());'))
     .pipe(ngAnnotate())
     .pipe(jshint())
