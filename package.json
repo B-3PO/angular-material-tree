@@ -1,6 +1,6 @@
 {
   "name": "angular-material-tree",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "author": "Ben Rubin",
   "description": "Angular material tree component",
   "keywords": "material, material-design, design, angular, component, tree, md",
@@ -19,6 +19,7 @@
     "gulp-bump": "^1.0.0",
     "gulp-concat": "^2.6.0",
     "gulp-cssnano": "^2.1.0",
+    "gulp-file": "^0.3.0",
     "gulp-filter": "^4.0.0",
     "gulp-inject": "^4.0.0",
     "gulp-jasmine": "^2.4.0",
@@ -39,6 +40,7 @@
     "karma-phantomjs-launcher": "^1.0.1",
     "karma-spec-reporter": "0.0.26",
     "merge-stream": "^1.0.0",
+    "require-sass": "^1.0.4",
     "through2": "^2.0.1"
   },
   "scripts": {
