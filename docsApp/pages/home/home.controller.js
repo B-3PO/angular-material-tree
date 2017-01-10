@@ -24,7 +24,8 @@ function HomeController($scope) {
           items: [
             {
               id: 1,
-              name: 'Item One'
+              name: 'Item One',
+              reporting_group: 'Reporting Test One'
             }
           ]
         }

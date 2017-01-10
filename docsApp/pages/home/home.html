@@ -1,6 +1,8 @@
 <div layout="row">
   <div layout="column" flex>
     <input type="search" style="line-height: 48px; padding-left: 16px; border: none; outline: none;" placeholder="Search..." ng-model="searchTerm" />
+
+
     <md-tree ng-model="vm.selectedItems" restrict-selection="depth" flex>
       <md-branch branch-repeat="location in vm.locationData | filter: $mdBranchFilter(searchTerm) | orderBy: location.name" class="md-2-line" select>
         <div class="md-branch-text">
@@ -30,15 +32,55 @@
   </div>
 
   <div style="width: 420px; padding: 0 16px; border-left: 1px solid #ccc; height: 100%; z-index: 99; background: #EEE;">
-    <h2>Tree Component v0.0.1</h2>
+    <h2>Tree Component v0.0.2</h2>
     <a href="/components/tree/v0">version 0</a>
+    <a href="/components/tree/v1">version 1</a>
     <p><b>Whats new</b></p>
-    <p>Everything</p>
-    <ul>
-      <li>The core has been rebuilt</li>
-      <li>You can now filter</li>
-      <li>Branch auto open while filtering</li>
-    </ul>
+    <p>Keyboard Controls</p>
+    <div marked>
+    <table>
+<thead>
+<tr>
+<th style="text-align:left">Key</th>
+<th style="text-align:left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><span ng-non-bindable=""><code>Down Arrow</code></span></td>
+<td style="text-align:left">focus on next visible branch</td>
+</tr>
+<tr>
+<td style="text-align:left"><span ng-non-bindable=""><code>Up Arrow</code></span></td>
+<td style="text-align:left">focus on previous visible branch</td>
+</tr>
+<tr>
+<td style="text-align:left"><span ng-non-bindable=""><code>Right Arrow</code></span></td>
+<td style="text-align:left">If current focused branch is closed then open it, otherwise focus on next branch</td>
+</tr>
+<tr>
+<td style="text-align:left"><span ng-non-bindable=""><code>Left Arrow</code></span></td>
+<td style="text-align:left">If current focused branch is open then close it, otherwise focus on previous branch</td>
+</tr>
+<tr>
+<td style="text-align:left"><span ng-non-bindable=""><code>Enter</code></span></td>
+<td style="text-align:left">Selection toggle. This will deselect all previous selections</td>
+</tr>
+<tr>
+<td style="text-align:left"><span ng-non-bindable=""><code>Space</code></span></td>
+<td style="text-align:left">Same as <span ng-non-bindable=""><code>Enter</code></span></td>
+</tr>
+<tr>
+<td style="text-align:left"><span ng-non-bindable=""><code>Shift+Enter</code></span></td>
+<td style="text-align:left">Multi select. This will toggle focused branches selection without deselecting previous selections</td>
+</tr>
+<tr>
+<td style="text-align:left"><span ng-non-bindable=""><code>Shift+Space</code></span></td>
+<td style="text-align:left">Same as <span ng-non-bindable=""><code>Shift+Enter</code></span></td>
+</tr>
+</tbody>
+</table>
+</div>
     <p>
       You can leave comments about the tree here<br />
       <a href="https://bypassmobile.atlassian.net/wiki/display/PROD/Tree+live+demo">Confluence Doc Link</a>

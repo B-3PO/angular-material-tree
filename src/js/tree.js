@@ -217,9 +217,9 @@ function treeDirective($mdTheming, $mdUtil) {
         item = branchScope[branchScope.repeatName];
 
         // set element select state
-        // if ($$mdTree.isShiftPressed()) {
-          // rangeSelect(branch);
-        // } else {
+        if ($$mdTree.isShiftPressed()) {
+          rangeSelect(branch);
+        } else {
           // if selectable and not clicked on checkbox then deselct all
           if (!$$mdTree.isCheckbox(closest)) {
             if (Object.keys(vm.selected).length > 1) { _isSelected = false; }
@@ -231,7 +231,7 @@ function treeDirective($mdTheming, $mdUtil) {
           } else {
             branch.setAttribute('selected', 'selected');
           }
-        // }
+        }
         item.$$selected = !item.$$selected;
         toggleSelect(_isSelected, hashGetter(item), item, branch);
         e.stopPropagation();
@@ -241,6 +241,7 @@ function treeDirective($mdTheming, $mdUtil) {
     }
 
     // TODO this currently will only work visually, needs to set model data
+    // TODO make this work across all lbranches with the same depth
     // NOTE may want to add selection memory so we can select from last selection
     // Currentl we select from top if possible then from bottom
     function rangeSelect(branchElement) {
