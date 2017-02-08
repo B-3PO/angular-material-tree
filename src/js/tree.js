@@ -38,7 +38,6 @@ function treeDirective($mdTheming, $mdUtil) {
     vm.selected = {};
     vm.opened = {};
     vm.init = init;
-    $$mdTree.init(vm, $element); //make tree accesable to branch, via service
 
     // setup ngModel and make it available to controller
     function init(ngModel, binding) {

@@ -4,8 +4,6 @@ angular
 
 
 function treeService($mdUtil, $animateCss) {
-  var treeCtrl;
-  var treeElement;
   // track shift pressed
   var shiftPressed = false;
   document.addEventListener('keydown', function (e) {
@@ -16,13 +14,11 @@ function treeService($mdUtil, $animateCss) {
   });
 
   return {
-    init: init,
     open: open,
     close: close,
     canOpen: canOpen,
     filterOpen: filterOpen,
     filterClose: filterClose,
-    getTreeCtrl: getTreeCtrl,
     getTreeElement: getTreeElement,
     getBranch: getBranch,
     getArrow: getArrow,
@@ -36,15 +32,6 @@ function treeService($mdUtil, $animateCss) {
     hasCheckbox: hasCheckbox,
     getCheckbox: getCheckbox
   };
-
-  function init(_treeCtrl, _treeElement) {
-    treeCtrl = _treeCtrl;
-    treeElement = _treeElement;
-  }
-
-  function getTreeCtrl() {
-    return treeCtrl;
-  }
 
   function getTreeElement() {
     return treeElement;

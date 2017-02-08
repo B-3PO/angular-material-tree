@@ -23,6 +23,8 @@ var BRANCH_ARROW_TEMPLATE = angular.element('<div class="md-branch-icon-containe
 
 /*@ngInject*/
 function branchDirective($parse, $document, $mdUtil, $filter, $$mdTree, $mdConstant) {
+  var treeElement;
+
   return {
     restrict: 'E',
     require: ['?^mdBranchTemplates'],
@@ -407,7 +409,7 @@ function branchDirective($parse, $document, $mdUtil, $filter, $$mdTree, $mdConst
           var arrow = $$mdTree.getArrow(branchElement);
           if (arrow && !$$mdTree.isTip(branchElement)) {
             // open branch by simulating click
-            $$mdTree.getTreeElement().triggerHandler({
+            getTreeElement(branchElement).triggerHandler({
               type: 'click',
               target: arrow
             });
@@ -425,7 +427,7 @@ function branchDirective($parse, $document, $mdUtil, $filter, $$mdTree, $mdConst
           var arrow = $$mdTree.getArrow(branchElement);
           if (arrow) {
             // close branch by simulating click
-            $$mdTree.getTreeElement().triggerHandler({
+            getTreeElement(branchElement).triggerHandler({
               type: 'click',
               target: arrow
             });
@@ -453,7 +455,7 @@ function branchDirective($parse, $document, $mdUtil, $filter, $$mdTree, $mdConst
       function toggleOpen(branchElement) {
         if ($$mdTree.canOpen(branchElement) && !$$mdTree.isTip(branchElement)) {
           // open branch by simulating click
-          $$mdTree.getTreeElement().triggerHandler({
+          getTreeElement(branchElement).triggerHandler({
             type: 'click',
             target: $$mdTree.getArrow(branchElement)
           });
@@ -468,11 +470,27 @@ function branchDirective($parse, $document, $mdUtil, $filter, $$mdTree, $mdConst
           el = $$mdTree.getCheckbox(branchElement);
         }
         if (el) {
-          $$mdTree.getTreeElement().triggerHandler({
+          getTreeElement(branchElement).triggerHandler({
             type: 'click',
             target: el
           });
         }
+      }
+
+
+      function getTreeElement(branchElement) {
+        if (treeElement) { return treeElement; }
+        treeElement = walkForTree(branchElement);
+        return treeElement;
+      }
+
+      function walkForTree(el) {
+        var parent = el.parentNode;
+        while (parent && parent !== document.body) {
+          if (parent.nodeName === 'MD-TREE') { return angular.element(parent); }
+          parent = parent.parentNode;
+        }
+        return null;
       }
 
     };
