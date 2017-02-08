@@ -215,10 +215,11 @@ function treeDirective($mdTheming, $mdUtil) {
         var _isSelected = $$mdTree.isSelected(branch);
         item = branchScope[branchScope.repeatName];
 
+        // NOTE will add range selection back
         // set element select state
-        if ($$mdTree.isShiftPressed()) {
-          rangeSelect(branch);
-        } else {
+        // if ($$mdTree.isShiftPressed()) {
+        //   rangeSelect(branch);
+        // } else {
           // if selectable and not clicked on checkbox then deselct all
           if (!$$mdTree.isCheckbox(closest)) {
             if (Object.keys(vm.selected).length > 1) { _isSelected = false; }
@@ -230,7 +231,7 @@ function treeDirective($mdTheming, $mdUtil) {
           } else {
             branch.setAttribute('selected', 'selected');
           }
-        }
+        // }
         item.$$selected = !item.$$selected;
         toggleSelect(_isSelected, hashGetter(item), item, branch);
         e.stopPropagation();
