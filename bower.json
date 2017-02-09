@@ -1,6 +1,6 @@
 {
   "name": "angular-material-tree",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Angular material tree component",
   "main": [
     "dist/angular-material-tree.js",
