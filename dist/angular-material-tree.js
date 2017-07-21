@@ -16,7 +16,7 @@ function mdTreeTheme($mdThemingProvider, TREE_THEME) {
   $mdThemingProvider.registerStyles(TREE_THEME);
 }
 }());
-(function(){"use strict";angular.module("angular-material-tree").constant("TREE_THEME","md-branch.md-THEME_NAME-theme .md-branch-icon svg{fill:'{{foreground-2}}'}md-branch.md-THEME_NAME-theme.md-open:not(.md-tip)>.md-branch-inner{border-bottom-color:'{{foreground-4}}'}md-branch.md-THEME_NAME-theme.md-2-line .md-branch-text h3,md-branch.md-THEME_NAME-theme.md-2-line .md-branch-text h4,md-branch.md-THEME_NAME-theme.md-3-line .md-branch-text h3,md-branch.md-THEME_NAME-theme.md-3-line .md-branch-text h4{color:'{{foreground-1}}'}md-branch.md-THEME_NAME-theme.md-2-line .md-branch-text p,md-branch.md-THEME_NAME-theme.md-3-line .md-branch-text p{color:'{{foreground-2}}'}md-branch.md-THEME_NAME-theme.md-checkbox-enabled .checkbox-icon{border-color:'{{foreground-2}}'}md-branch.md-THEME_NAME-theme.md-checkbox-enabled[selected]>.md-branch-inner .checkbox-icon{border-color:'{{foreground-2}}';background-color:'{{primary-color-0.87}}'}md-branch.md-THEME_NAME-theme.md-checkbox-enabled[selected]>.md-branch-inner .checkbox-icon:after{border-color:'{{primary-contrast-0.87}}'}md-branch.md-THEME_NAME-theme:not([disabled]) .md-branch-inner{background-color:'{{background-hue-1}}'}md-branch.md-THEME_NAME-theme:not([disabled]) .md-branch-inner:hover{background-color:'{{background-500-0.2}}'}md-branch.md-THEME_NAME-theme:not([disabled]) .md-branch-inner.md-icon-button:hover{background-color:transparent}md-branch.md-THEME_NAME-theme:not([disabled]).md-focused{outline:none}md-branch.md-THEME_NAME-theme:not([disabled]).md-focused>.md-branch-inner{background-color:'{{background-100}}'}\n");}());
+(function(){"use strict";angular.module("angular-material-tree").constant("TREE_THEME","md-branch.md-THEME_NAME-theme .md-branch-icon svg{fill:'{{foreground-2}}'}md-branch.md-THEME_NAME-theme.md-open:not(.md-tip)>.md-branch-inner{border-bottom-color:'{{foreground-4}}'}md-branch.md-THEME_NAME-theme.md-2-line .md-branch-text h3,md-branch.md-THEME_NAME-theme.md-2-line .md-branch-text h4,md-branch.md-THEME_NAME-theme.md-3-line .md-branch-text h3,md-branch.md-THEME_NAME-theme.md-3-line .md-branch-text h4{color:'{{foreground-1}}'}md-branch.md-THEME_NAME-theme.md-2-line .md-branch-text p,md-branch.md-THEME_NAME-theme.md-3-line .md-branch-text p{color:'{{foreground-2}}'}md-branch.md-THEME_NAME-theme.md-checkbox-enabled .checkbox-icon{border-color:'{{foreground-2}}'}md-branch.md-THEME_NAME-theme.md-checkbox-enabled[selected]>.md-branch-inner .checkbox-icon{border-color:'{{foreground-2}}';background-color:'{{primary-color-0.87}}'}md-branch.md-THEME_NAME-theme.md-checkbox-enabled[selected]>.md-branch-inner .checkbox-icon:after{border-color:'{{primary-contrast-0.87}}'}md-branch.md-THEME_NAME-theme:not([disabled]) .md-branch-inner{background-color:'{{background-hue-1}}'}md-branch.md-THEME_NAME-theme:not([disabled]) .md-branch-inner:hover{background-color:'{{background-500-0.2}}'}md-branch.md-THEME_NAME-theme:not([disabled]) .md-branch-inner.md-icon-button:hover{background-color:transparent}md-branch.md-THEME_NAME-theme:not([disabled]).md-focused{outline:none}md-branch.md-THEME_NAME-theme:not([disabled]).md-focused>.md-branch-inner{background-color:'{{background-100}}'}md-branch.md-THEME_NAME-theme:not([disabled]).md-select-highlight-enabled[selected]>.md-branch-inner{background-color:'{{primary-color-0.12}}'}\n");}());
 (function(){"use strict";// TODO Add key controls
 //      * Enter: Shoudl select happen if branch is deepest descendent?
 //      * Shift+Enter: multiple select
@@ -43,9 +43,10 @@ var BRANCH_ARROW_TEMPLATE = angular.element('<div class="md-branch-icon-containe
 
 /*@ngInject*/
 function branchDirective($parse, $document, $mdUtil, $filter, $$mdTree, $mdConstant) {
+  var treeElement;
+
   return {
     restrict: 'E',
-    require: ['?^mdBranchTemplates'],
     priority: 1000,
     terminal: true,
     transclude: 'element',
@@ -75,6 +76,7 @@ function branchDirective($parse, $document, $mdUtil, $filter, $$mdTree, $mdConst
       if (isOpen) { startWatching(); }
 
       // standard angular filter wrapped so we can determian if the parent should be opened for closed
+      var filters = {};
       scope.$mdBranchFilter = function (value) {
         var filtered = $filter('filter')(value);
 
@@ -208,12 +210,17 @@ function branchDirective($parse, $document, $mdUtil, $filter, $$mdTree, $mdConst
       // this is only done once
       function updateNewBlock(block) {
         var isSelectable = block.element.attr('select') !== undefined;
+        var hideCheckbox = block.element.attr('hide-checkbox') !== undefined;
         var innerContainer = angular.element('<div class="md-branch-inner">'); // branch contents
         var branchContainer = angular.element('<div class="md-branch-container">'); // nested branched
-        innerContainer.append(BRANCH_ARROW_TEMPLATE.clone());
+
         if (isSelectable) {
-          block.element.addClass('md-checkbox-enabled');
-          innerContainer.append(CHECKBOX_SELECTION_INDICATOR.clone());
+          if (!hideCheckbox) {
+            block.element.addClass('md-checkbox-enabled');
+            innerContainer.append(CHECKBOX_SELECTION_INDICATOR.clone());
+          } else {
+            block.element.addClass('md-select-highlight-enabled');
+          }
         }
         Array.prototype.slice.call(block.element[0].childNodes).forEach(function (node) {
           if (node.nodeType === 8 && node.nodeValue.trim() === 'mdBranch:') {
@@ -226,11 +233,12 @@ function branchDirective($parse, $document, $mdUtil, $filter, $$mdTree, $mdConst
 
         // add branches
         if (branchContainer[0].childNodes.length) {
+          innerContainer.prepend(BRANCH_ARROW_TEMPLATE.clone());
           block.element.append(branchContainer);
 
         // if no more branches then mark as tip
         } else {
-          block.element.addClass('md-tip');
+          block.element.addClass('md-tip no-arrow');
         }
       }
 
@@ -427,7 +435,7 @@ function branchDirective($parse, $document, $mdUtil, $filter, $$mdTree, $mdConst
           var arrow = $$mdTree.getArrow(branchElement);
           if (arrow && !$$mdTree.isTip(branchElement)) {
             // open branch by simulating click
-            $$mdTree.getTreeElement().triggerHandler({
+            getTreeElement(branchElement).triggerHandler({
               type: 'click',
               target: arrow
             });
@@ -445,7 +453,7 @@ function branchDirective($parse, $document, $mdUtil, $filter, $$mdTree, $mdConst
           var arrow = $$mdTree.getArrow(branchElement);
           if (arrow) {
             // close branch by simulating click
-            $$mdTree.getTreeElement().triggerHandler({
+            getTreeElement(branchElement).triggerHandler({
               type: 'click',
               target: arrow
             });
@@ -473,7 +481,7 @@ function branchDirective($parse, $document, $mdUtil, $filter, $$mdTree, $mdConst
       function toggleOpen(branchElement) {
         if ($$mdTree.canOpen(branchElement) && !$$mdTree.isTip(branchElement)) {
           // open branch by simulating click
-          $$mdTree.getTreeElement().triggerHandler({
+          getTreeElement(branchElement).triggerHandler({
             type: 'click',
             target: $$mdTree.getArrow(branchElement)
           });
@@ -488,38 +496,32 @@ function branchDirective($parse, $document, $mdUtil, $filter, $$mdTree, $mdConst
           el = $$mdTree.getCheckbox(branchElement);
         }
         if (el) {
-          $$mdTree.getTreeElement().triggerHandler({
+          getTreeElement(branchElement).triggerHandler({
             type: 'click',
             target: el
           });
         }
       }
 
+
+      function getTreeElement(branchElement) {
+        if (treeElement) { return treeElement; }
+        treeElement = walkForTree(branchElement);
+        return treeElement;
+      }
+
+      function walkForTree(el) {
+        var parent = el.parentNode;
+        while (parent && parent !== document.body) {
+          if (parent.nodeName === 'MD-TREE') { return angular.element(parent); }
+          parent = parent.parentNode;
+        }
+        return null;
+      }
+
     };
   }
 
-}
-}());
-(function(){"use strict";// TODO Implament branch templates
-//      May need to manually transclude element
-
-angular
-  .module('angular-material-tree')
-  .directive('mdBranchTemplates', branchTemplateDirective);
-
-
-
-function branchTemplateDirective() {
-  return {
-    restrict: 'E',
-    require: '^mdTree',
-    link: link
-  };
-
-
-  function link(scope, element, attrs, ctrl) {
-
-  }
 }
 }());
 (function(){"use strict";
@@ -529,8 +531,6 @@ treeService.$inject = ["$mdUtil", "$animateCss"];angular
 
 
 function treeService($mdUtil, $animateCss) {
-  var treeCtrl;
-  var treeElement;
   // track shift pressed
   var shiftPressed = false;
   document.addEventListener('keydown', function (e) {
@@ -541,13 +541,11 @@ function treeService($mdUtil, $animateCss) {
   });
 
   return {
-    init: init,
     open: open,
     close: close,
     canOpen: canOpen,
     filterOpen: filterOpen,
     filterClose: filterClose,
-    getTreeCtrl: getTreeCtrl,
     getTreeElement: getTreeElement,
     getBranch: getBranch,
     getArrow: getArrow,
@@ -561,15 +559,6 @@ function treeService($mdUtil, $animateCss) {
     hasCheckbox: hasCheckbox,
     getCheckbox: getCheckbox
   };
-
-  function init(_treeCtrl, _treeElement) {
-    treeCtrl = _treeCtrl;
-    treeElement = _treeElement;
-  }
-
-  function getTreeCtrl() {
-    return treeCtrl;
-  }
 
   function getTreeElement() {
     return treeElement;
@@ -655,9 +644,12 @@ function treeService($mdUtil, $animateCss) {
   // close branch for filtering
   // No animations
   function filterClose(block) {
-    $mdUtil.disconnectScope(block.scope);
+    // do not disconnect top layer scopes or watchers
+    if (block.scope.$depth > 0) {
+      $mdUtil.disconnectScope(block.scope);
+      block.scope.killWatching();
+    }
     block.scope.isOpen = false;
-    block.scope.killWatching();
     block.element.removeClass('md-open');
     var container = angular.element(block.element[0].querySelector('.md-branch-container'));
     container.css('max-height', '');
@@ -794,7 +786,6 @@ function treeDirective($mdTheming, $mdUtil) {
     vm.selected = {};
     vm.opened = {};
     vm.init = init;
-    $$mdTree.init(vm, $element); //make tree accesable to branch, via service
 
     // setup ngModel and make it available to controller
     function init(ngModel, binding) {
@@ -972,9 +963,10 @@ function treeDirective($mdTheming, $mdUtil) {
         var _isSelected = $$mdTree.isSelected(branch);
         item = branchScope[branchScope.repeatName];
 
+        // NOTE will add range selection back
         // set element select state
         // if ($$mdTree.isShiftPressed()) {
-          // rangeSelect(branch);
+        //   rangeSelect(branch);
         // } else {
           // if selectable and not clicked on checkbox then deselct all
           if (!$$mdTree.isCheckbox(closest)) {
@@ -997,6 +989,7 @@ function treeDirective($mdTheming, $mdUtil) {
     }
 
     // TODO this currently will only work visually, needs to set model data
+    // TODO make this work across all lbranches with the same depth
     // NOTE may want to add selection memory so we can select from last selection
     // Currentl we select from top if possible then from bottom
     function rangeSelect(branchElement) {
