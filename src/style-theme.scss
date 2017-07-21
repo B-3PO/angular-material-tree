@@ -19,7 +19,6 @@ md-branch.md-THEME_NAME-theme {
     }
   }
 
-
   &.md-checkbox-enabled {
     .checkbox-icon {
       border-color: '{{foreground-2}}';
@@ -56,7 +55,12 @@ md-branch.md-THEME_NAME-theme {
 
       & >.md-branch-inner {
         background-color: '{{background-100}}';
-        // border-color: '{{primary-color-0.36}}';
+      }
+    }
+
+    &.md-select-highlight-enabled[selected] {
+      & >.md-branch-inner {
+        background-color: '{{primary-color-0.12}}';
       }
     }
   }

@@ -117,9 +117,12 @@ function treeService($mdUtil, $animateCss) {
   // close branch for filtering
   // No animations
   function filterClose(block) {
-    $mdUtil.disconnectScope(block.scope);
+    // do not disconnect top layer scopes or watchers
+    if (block.scope.$depth > 0) {
+      $mdUtil.disconnectScope(block.scope);
+      block.scope.killWatching();
+    }
     block.scope.isOpen = false;
-    block.scope.killWatching();
     block.element.removeClass('md-open');
     var container = angular.element(block.element[0].querySelector('.md-branch-container'));
     container.css('max-height', '');

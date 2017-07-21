@@ -27,7 +27,6 @@ function branchDirective($parse, $document, $mdUtil, $filter, $$mdTree, $mdConst
 
   return {
     restrict: 'E',
-    require: ['?^mdBranchTemplates'],
     priority: 1000,
     terminal: true,
     transclude: 'element',
@@ -57,6 +56,7 @@ function branchDirective($parse, $document, $mdUtil, $filter, $$mdTree, $mdConst
       if (isOpen) { startWatching(); }
 
       // standard angular filter wrapped so we can determian if the parent should be opened for closed
+      var filters = {};
       scope.$mdBranchFilter = function (value) {
         var filtered = $filter('filter')(value);
 
@@ -190,12 +190,17 @@ function branchDirective($parse, $document, $mdUtil, $filter, $$mdTree, $mdConst
       // this is only done once
       function updateNewBlock(block) {
         var isSelectable = block.element.attr('select') !== undefined;
+        var hideCheckbox = block.element.attr('hide-checkbox') !== undefined;
         var innerContainer = angular.element('<div class="md-branch-inner">'); // branch contents
         var branchContainer = angular.element('<div class="md-branch-container">'); // nested branched
-        innerContainer.append(BRANCH_ARROW_TEMPLATE.clone());
+
         if (isSelectable) {
-          block.element.addClass('md-checkbox-enabled');
-          innerContainer.append(CHECKBOX_SELECTION_INDICATOR.clone());
+          if (!hideCheckbox) {
+            block.element.addClass('md-checkbox-enabled');
+            innerContainer.append(CHECKBOX_SELECTION_INDICATOR.clone());
+          } else {
+            block.element.addClass('md-select-highlight-enabled');
+          }
         }
         Array.prototype.slice.call(block.element[0].childNodes).forEach(function (node) {
           if (node.nodeType === 8 && node.nodeValue.trim() === 'mdBranch:') {
@@ -208,11 +213,12 @@ function branchDirective($parse, $document, $mdUtil, $filter, $$mdTree, $mdConst
 
         // add branches
         if (branchContainer[0].childNodes.length) {
+          innerContainer.prepend(BRANCH_ARROW_TEMPLATE.clone());
           block.element.append(branchContainer);
 
         // if no more branches then mark as tip
         } else {
-          block.element.addClass('md-tip');
+          block.element.addClass('md-tip no-arrow');
         }
       }
 
