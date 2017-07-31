@@ -47,6 +47,7 @@ function branchDirective($parse, $document, $mdUtil, $filter, $$mdTree, $mdConst
     return function postLink(scope, element, attrs, ctrls, transclude) {
       var dataWatcher;
       var items;
+      var oldItems;
       var keyCodes = $mdConstant.KEY_CODE;
       var blocks = [];
       var pooledBlocks = [];
@@ -95,8 +96,9 @@ function branchDirective($parse, $document, $mdUtil, $filter, $$mdTree, $mdConst
       scope.killWatching = killWatching;
 
 
-      function updateBranch(newItems, oldItems) {
+      function updateBranch(newItems, old) {
         if (isUpdating) { return; }
+        oldItems = old;
         isUpdating = true;
 
         var i;
