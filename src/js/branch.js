@@ -53,27 +53,26 @@ function branchDirective($parse, $document, $mdUtil, $filter, $$mdTree, $mdConst
       var itemsLength = 0;
       var isUpdating = false;
       var isFilterOpen = false;
+      var filter = $filter('filter');
       if (isOpen) { startWatching(); }
 
-      // standard angular filter wrapped so we can determian if the parent should be opened for closed
-      var filters = {};
-      scope.$mdBranchFilter = function (value) {
-        var filtered = $filter('filter')(value);
-
+      scope.$mdBranchFilter = function (arr, filterValue) {
+        var filtered = filter(arr, filterValue);
         // open branches if filter string is greater then 2 and items have been found
-        if (filtered && filtered.length > 2) {
+        if (filtered.length < arr.length && filtered.length > 0) {
           isFilterOpen = true;
           blocks.forEach(function (block) {
             $$mdTree.filterOpen(block);
           });
 
         // close branches if filter is less than 3 characters or no items have been found
-        } else if ((!filtered || filtered.length < 3) && isFilterOpen) {
+        } else if (isFilterOpen && filtered.length === 0) {
           isFilterOpen = false;
           blocks.forEach(function (block) {
             $$mdTree.filterClose(block);
           });
         }
+
         return filtered;
       };
 
@@ -239,6 +238,19 @@ function branchDirective($parse, $document, $mdUtil, $filter, $$mdTree, $mdConst
       function updateState($scope, index) {
         var item = items ? items[index] : undefined;
         var element = $scope.$element && $scope.$element[0] ? $scope.$element : undefined;
+
+        // if the data is replaced and we loose the protected state properties then we need to copy them across
+        if (item.$$mdBranchId === undefined) {
+          var oldItem = oldItems[index];
+          if (oldItem && oldItem.id === item.id ) {
+            item.$$mdBranchId = oldItem.$$mdBranchId;
+            item.$$selected = oldItem.$$selected;
+            Object.defineProperty(item, '$$isOpen', {
+              value: oldItem.$$isOpen,
+              enumerable: false, writable: true, configurable: false
+            });
+          }
+        }
 
         // reconnect all scopes
         $mdUtil.reconnectScope($scope);

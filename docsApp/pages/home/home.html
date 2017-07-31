@@ -4,19 +4,19 @@
 
 
     <md-tree ng-model="vm.selectedItems" restrict-selection="depth" flex>
-      <md-branch branch-repeat="location in vm.locationData | filter: $mdBranchFilter(searchTerm) | orderBy: location.name" class="md-2-line" select>
+      <md-branch branch-repeat="location in $mdBranchFilter(vm.locationData, searchTerm) | orderBy: location.name" class="md-2-line" select hide-checkbox>
         <div class="md-branch-text">
           <h3>{{location.name}}</h3>
           <p>Location</p>
         </div>
 
-        <md-branch branch-repeat="menu in location.menus | filter: $mdBranchFilter(searchTerm) | orderBy: menu.name" class="md-2-line" select>
+        <md-branch branch-repeat="menu in $mdBranchFilter(location.menus, searchTerm) | orderBy: menu.name" class="md-2-line" select>
           <div class="md-branch-text">
             <h3>{{menu.name}}</h3>
             <p>Menu</p>
           </div>
 
-          <md-branch branch-repeat="item in menu.items | filter: $mdBranchFilter(searchTerm) | orderBy: item.name" class="md-2-line" select>
+          <md-branch branch-repeat="item in $mdBranchFilter(menu.items, searchTerm) | orderBy: item.name" class="md-2-line" select>
             <div class="md-branch-text">
               <h3>{{item.name}}</h3>
               <p>Item</p>
@@ -25,6 +25,19 @@
         </md-branch>
       </md-branch>
     </md-tree>
+
+
+
+    <!-- <md-tree ng-model="vm.selectedItems" restrict-selection="depth" flex>
+      <md-branch branch-repeat="location in vm.locationData | filter: $mdBranchFilter(searchTerm) | orderBy: location.name" class="md-2-line" select hide-checkbox>
+        <div class="md-branch-text">
+          <h3>{{location.name}}</h3>
+          <p>Location</p>
+        </div>
+      </md-branch>
+    </md-tree> -->
+
+
   </div>
 
   <div class="master-panel closed">

@@ -101,6 +101,15 @@ function treeDirective($mdTheming, $mdUtil) {
       vm.selected[hashKey] = hashValue;
     }
     function deselect(hashKey, element) {
+      if (!vm.selected[hashKey]) { return; }
+      Array.prototype.slice.call($element[0].querySelectorAll('md-branch[selected]')).forEach(function (el) {
+        var element = angular.element(el);
+        var scope = element.scope();
+        if (scope[scope.repeatName] === vm.selected[hashKey]) {
+          el.removeAttribute('selected');
+        }
+      });
+      vm.selected[hashKey].$$selected = false;
       delete vm.selected[hashKey];
     }
 
